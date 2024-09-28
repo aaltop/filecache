@@ -36,9 +36,12 @@ class FileCache:
         with open(file, "rb") as f:
             hash_object = hashlib.file_digest(f, self.hasher)
 
+        digest = hash_object.hexdigest()
+        self.cache[file] = digest
+
         return {
             "file": file,
-            "digest": hash_object.hexdigest(),
+            "digest": digest,
             "hash_object": hash_object
         }
     
@@ -46,39 +49,29 @@ class FileCache:
             self,
             paths:list[os.PathLike],
             match_patterns: list[str] | list[Path] = None,
-            depth = 0) -> typing.Generator[dict[str, Path | str], None, None]:
+            depth = 0) -> typing.Self:
         '''
         Hash the files pointed to by the paths in `paths`. If a path
         is a folder, hash all the files in that folder (and subfolders
         up to depth `depth`). Only
         hash files which have a match in `match_patterns` (if None, accept all).
-
-        Returns a generator yielding 
-        \{
-            "file": pathlib.Path,
-            "digest": str
-        }
-        for each file.
         '''
         ...
 
         flattened_paths = expand_directories(paths, depth = depth)
+
 
         if not (match_patterns is None):
             flattened_paths = filter(
                 lambda path: match_all(path, match_patterns),
                 flattened_paths
             )
-        
 
         path: Path
         for path in flattened_paths:
-            file, digest, _ = self.hash_file(path).values()
-            self.cache[file] = digest
-            yield {
-                "file": file,
-                "digest": digest
-            }
+            self.hash_file(path).values()
+
+        return self
 
     def info(self):
         '''
