@@ -103,7 +103,7 @@ class FileCache:
 
         return self
 
-    def load(self, path:Path = None, relative = True):
+    def load(self, path:Path = None, relative = True) -> dict:
         '''
         Load the state as saved by `save()`. If `relative`,
         compute the file paths relative to current working directory.
@@ -123,10 +123,28 @@ class FileCache:
             
             return path_obj
         
-        self.cache = {
+        return {
             convert_path(file_path): digest
             for file_path, digest in saved_cache["hashes"].items()
         }
+    
+    def compare_hashes(self, other = None):
+        '''
+        Compare the hashes in self.cache and in the other cache.
+        Returns a dictionary with each path in the current self.cache
+        as keys and booleans as values denoting whether the caches differ
+        on the given path. No match for a file in `other` is considered a
+        differ.
 
-        return self
+        By default `other` is gotten using `self.load()`.
+        '''
+
+        other = self.load() if other is None else other
+
+        comp = {}
+        for key, value in self.cache.items():
+
+            previous_hash = other.get(key)
+            comp[key] = True if previous_hash is None else (previous_hash != value)
         
+        return comp
