@@ -9,13 +9,21 @@ import json
 class FileCache:
 
 
-    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False)):
+    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
         '''
         `hasher` is expected to be a hashlib-type hasher factory.
+
+        `save_path` is the path to save the cache to, by default 
+        "./file_cache/cache.json"
         '''
 
         self.hasher = hasher
         self.cache = {}
+        self.save_path = (
+            Path() / "file_cache" / "cache.json"
+            if save_path is None 
+            else save_path
+        )
 
     def str_cache(self):
         '''
@@ -90,12 +98,42 @@ class FileCache:
     
     def save(self, path:Path = None, json_kwargs: dict = None):
         '''
-        Save the state as a json file, by default in "./file_cache/cache.json".
+        Save the state as a json file.
         '''
 
-        path = Path() / "file_cache" / "cache.json" if path is None else path
+        path = self.save_path if path is None else path
         json_kwargs = {} if json_kwargs is None else json_kwargs
 
         path.parents[0].mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
             json.dump(self.get_state(), f, **json_kwargs)
+
+        return self
+
+    def load(self, path:Path = None, relative = True):
+        '''
+        Load the state as saved by `save()`. If `relative`,
+        compute the file paths relative to current working directory.
+        '''
+
+        path = self.save_path if path is None else path
+
+
+        with open(path) as f:
+            saved_cache = json.load(f)
+
+        def convert_path(path_str):
+
+            path_obj = Path(path_str)
+            if relative:
+                path_obj = path_obj.relative_to(Path().absolute())
+            
+            return path_obj
+        
+        self.cache = {
+            convert_path(file_path): digest
+            for file_path, digest in saved_cache["hashes"].items()
+        }
+
+        return self
+        
