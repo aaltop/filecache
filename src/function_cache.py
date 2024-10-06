@@ -1,3 +1,5 @@
+from .abstract_cache import AbstractCache
+
 from functools import wraps
 import inspect
 import hashlib
@@ -5,37 +7,10 @@ from pathlib import Path
 import json
 
 
-class FunctionCache:
+class FunctionCache(AbstractCache):
 
-
-    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
-        '''
-        `hasher` is expected to be a hashlib-type hasher factory.
-
-        `save_path` is the path to save the cache to, by default 
-        "./file_cache/cache.json"
-        '''
-
-        self.hasher = hasher
-        self.cache = {}
-        self.save_path = (
-            Path() / "function_cache" / "cache.json"
-            if save_path is None 
-            else save_path
-        )
-
-    def dict_cache(self):
-        '''
-        Return the cache with the arguments dict as a regular dict.
-        '''
+    def json_cache(self):
         return {key: args.arguments for key, args in self.cache.items()}
-    
-    def str_cache(self):
-        '''
-        Return the cache as a JSON-compliant string.
-        '''
-
-        return json.dumps(self.dict_cache())
 
     def cache_function(self, func, args, kwargs):
         '''
