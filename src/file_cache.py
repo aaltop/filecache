@@ -1,4 +1,5 @@
 from .utils.path import expand_directories, match_all
+from .abstract_cache import AbstractCache
 
 from pathlib import Path
 import os
@@ -6,26 +7,9 @@ import hashlib
 import typing
 import json
 
-class FileCache:
+class FileCache(AbstractCache):
 
-
-    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
-        '''
-        `hasher` is expected to be a hashlib-type hasher factory.
-
-        `save_path` is the path to save the cache to, by default 
-        "./file_cache/cache.json"
-        '''
-
-        self.hasher = hasher
-        self.cache = {}
-        self.save_path = (
-            Path() / "file_cache" / "cache.json"
-            if save_path is None 
-            else save_path
-        )
-
-    def str_cache(self):
+    def json_cache(self):
         '''
         Return the cache with the paths as absolute strings.
         '''
@@ -73,36 +57,6 @@ class FileCache:
 
         return self
 
-    def info(self):
-        '''
-        Get information about the file cacher.
-        '''
-
-        return {
-            "hash_algorithm": self.hasher().name
-        }
-    
-    def get_state(self):
-
-        return {
-            "info": self.info(),
-            "hashes": self.str_cache()
-        }
-    
-    def save(self, path:Path = None, json_kwargs: dict = None):
-        '''
-        Save the state as a json file.
-        '''
-
-        path = self.save_path if path is None else path
-        json_kwargs = {} if json_kwargs is None else json_kwargs
-
-        path.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
-            json.dump(self.get_state(), f, **json_kwargs)
-
-        return self
-
     def load(self, path:Path = None, relative = True) -> dict:
         '''
         Load the state as saved by `save()`. If `relative`,
@@ -125,26 +79,5 @@ class FileCache:
         
         return {
             convert_path(file_path): digest
-            for file_path, digest in saved_cache["hashes"].items()
+            for file_path, digest in saved_cache["cache"].items()
         }
-    
-    def compare_hashes(self, other = None):
-        '''
-        Compare the hashes in self.cache and in the other cache.
-        Returns a dictionary with each path in the current self.cache
-        as keys and booleans as values denoting whether the caches differ
-        on the given path. No match for a file in `other` is considered a
-        differ.
-
-        By default `other` is gotten using `self.load()`.
-        '''
-
-        other = self.load() if other is None else other
-
-        comp = {}
-        for key, value in self.cache.items():
-
-            previous_hash = other.get(key)
-            comp[key] = True if previous_hash is None else (previous_hash != value)
-        
-        return comp
