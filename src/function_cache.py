@@ -2,10 +2,6 @@ from .abstract_cache import AbstractCache
 
 from functools import wraps
 import inspect
-import hashlib
-from pathlib import Path
-import json
-
 
 class FunctionCache(AbstractCache):
 
@@ -29,23 +25,20 @@ class FunctionCache(AbstractCache):
         bound_args.apply_defaults()
         self.cache[function_hash] = bound_args
         return (function_hash, bound_args)
-
-def function_cache_wrapper(cacher: FunctionCache):
-    '''
-    Wrap a function to have it's invocations be saved in `cacher`.
-    '''
-
-    def inner_wrapper(func):
-
-        @wraps(func)
-        def wrapper_func(*args, **kwargs):
-
-
-            cacher.cache_function(func, args, kwargs)
-            func(*args, **kwargs)
-        
-        return wrapper_func
     
-    return inner_wrapper
+    def __call__(self):
+
+        def inner_wrapper(func):
+
+            @wraps(func)
+            def wrapper_func(*args, **kwargs):
+
+
+                self.cache_function(func, args, kwargs)
+                func(*args, **kwargs)
+            
+            return wrapper_func
+        
+        return inner_wrapper
 
 
