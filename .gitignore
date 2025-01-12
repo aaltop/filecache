@@ -1,7 +1,32 @@
+# exclude all files everywhere
 *.*
+# exclude all paths on top level
+/*
+
+__pycache__
+
+# paths to include back on top-level
+# ----------------------------------
+!src
+!tests
+
+# ==================================
+
+
+
+# files to include
+# ----------------
 
 !*.py
 !.gitignore
 
+# pdm stuff
+!pyproject.toml
+!pdm.lock
 
-temp.py
+
+
+# ================
+
+# for having random stuff 
+*ignoregit*
