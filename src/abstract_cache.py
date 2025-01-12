@@ -1,9 +1,9 @@
-from src.utils.string import pascal_to_snake_case
-
 import abc
 import hashlib
 from pathlib import Path
-import json
+from typing import Self
+
+from src.utils.string import pascal_to_snake_case
 
 def compare_dict_values(dict1, dict2):
     '''
@@ -32,34 +32,36 @@ class AbstractCache(abc.ABC):
 
         cls.name_as_snake = pascal_to_snake_case(cls.__name__)
 
-    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
+    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path: Path = None):
         '''
         `hasher` is expected to be a hashlib-type hasher factory.
 
         `save_path` is the path to save the cache to, by default 
-        "./{class_name}/cache.json", where {class_name} is the name
+        "./{class_name}/cache", where {class_name} is the name
         of the class in snake case. (Assumes that the class name is
         Pascal case.)
         '''
 
-        if AbstractCache.name_as_snake is None:
+        if self.name_as_snake is None:
             self._calculate_name()
 
         self.hasher = hasher
         self.cache = {}
         self.save_path = (
-            Path() / self.name_as_snake / "cache.json"
+            Path() / self.name_as_snake / "cache"
             if save_path is None 
             else save_path
         )
+        self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
+        
+        try:
+            # assume database already exists
+            self.cache = self.load()
+        except FileNotFoundError:
+            # create database
+            self.save()
 
-    @abc.abstractmethod
-    def json_cache(self):
-        '''
-        Return the cache such that it is suitable for json.load.
-        '''
-
-    def metadata(self):
+    def metadata(self) -> dict:
         '''
         Get metadata about this cacher.
         '''
@@ -68,48 +70,35 @@ class AbstractCache(abc.ABC):
             "hash_algorithm": self.hasher().name
         }
     
-    def get_state(self):
+    def get_state(self) -> dict:
         '''
-        Get all data relevant to the cacher, suitable for passing
-        to json.load.
+        Get all data relevant to the cacher.
         '''
 
         return {
             "metadata": self.metadata(),
-            "cache": self.json_cache()
+            "cache": self.cache
         }
     
-    def save(self, path:Path = None, json_kwargs: dict = None):
+    @abc.abstractmethod
+    def save(self, path:Path = None) -> Self:
         '''
-        Save the state as a json file.
+        Save the state.
+
+        If `path` is None, defaults to self.save_path.
         '''
-
-        path = self.save_path if path is None else path
-        json_kwargs = {} if json_kwargs is None else json_kwargs
-
-        path.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
-            json.dump(self.get_state(), f, **json_kwargs)
-
-        return self
     
+    @abc.abstractmethod
     def load(self, path:Path = None) -> dict:
         '''
         Load the state as saved by `save()`.
+
+        If `path` is None, defaults to self.save_path.
         '''
-
-        path = self.save_path if path is None else path
-
-        with open(path) as f:
-            saved_cache = json.load(f)
-
-        return saved_cache["cache"]
-    
 
     def compare_hashes(self, other = None):
         '''
-        Compare the values in `self.cache` and in `other` using
-        `compare_dict_values()`.
+        Compare the values in `self.cache` and in `other`.
 
         By default `other` is gotten using `self.load()`.
         '''

@@ -1,26 +1,37 @@
-from .abstract_cache import AbstractCache
-
 from functools import wraps
 import inspect
-import typing
+from typing import (
+    NamedTuple, Any
+)
+from collections.abc import Callable
 
 import logging
 logger = logging.getLogger(__name__)
 
-class CacheFunctionReturn(typing.NamedTuple):
+from .shelve_cache import ShelveCache
+from src.utils.inspect import (
+    function_hash as hash_function,
+    bind_arguments
+)
+
+
+
+class CacheLookup(NamedTuple):
     '''
     `function_hash` is used as key in a `FunctionCache` cache,
-    `input_args` contains the input arguments to the function,
-    `previous_output` contains the previous output from the function
+    `input` contains the input arguments to the function,
+    `output` contains the previous output from the function
     with the same input arguments.
     '''
     function_hash: str
-    input_args: dict
-    previous_output: typing.Any = None
+    input: dict
+    output: Any = None
 
 
-
-class FunctionCache(AbstractCache):
+# TODO:
+# Another issue maybe how to work with methods. Just add an option
+# to the wrapper for wrapping a method instead?  
+class FunctionCache(ShelveCache):
     '''
     Class for caching the output from a function, such that the cache
     may also be saved to file.
@@ -31,22 +42,16 @@ class FunctionCache(AbstractCache):
     a function.
     '''
 
-    def json_cache(self):
-        return self.cache
-
-    def cache_function(self, func, args, kwargs) -> CacheFunctionReturn:
+    def lookup_function(self, func: Callable, args, kwargs) -> CacheLookup:
         '''
-        Cache the invocation of `func()` which was invoked with
-        `args` and `kwargs`.
+        Look for an invocation of `func()` invoked with
+        `args` and `kwargs`, initialising the entry if not found.
+        Mainly used internally.
         '''
 
         hasher = self.hasher()
-        hasher.update(bytes(inspect.getsource(func), encoding="utf-8"))
-        function_hash = hasher.hexdigest()
-        sig = inspect.signature(func)
-        bound_args = sig.bind(*args, **kwargs)
-        bound_args.apply_defaults()
-        bound_args = bound_args.arguments
+        function_hash = hash_function(hasher, func)
+        bound_args = bind_arguments(func, args, kwargs)
 
         # look for previous output that matches the function and call signature
         try:
@@ -54,13 +59,13 @@ class FunctionCache(AbstractCache):
             if previous_args == bound_args:
                 previous_output = self.cache[function_hash]["output"]
                 logger.debug("Found previous value, returning early")
-                return CacheFunctionReturn(function_hash, bound_args, previous_output)
+                return CacheLookup(function_hash, bound_args, previous_output)
         except LookupError:
             logger.debug("No previous data")
             pass
 
         self.cache[function_hash] = {"input": bound_args, "output": None}
-        return CacheFunctionReturn(function_hash, bound_args, None)
+        return CacheLookup(function_hash, bound_args, None)
     
     def __call__(self):
 
@@ -70,7 +75,7 @@ class FunctionCache(AbstractCache):
             def wrapper_func(*args, **kwargs):
 
 
-                function_hash, _, output = self.cache_function(func, args, kwargs)
+                function_hash, _, output = self.lookup_function(func, args, kwargs)
                 if not (output is None):
                     return output
                 

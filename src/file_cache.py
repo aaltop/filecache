@@ -1,5 +1,5 @@
 from .utils.path import expand_directories, match_all
-from .abstract_cache import AbstractCache
+from .json_cache import JsonCache
 
 from pathlib import Path
 import os
@@ -7,7 +7,7 @@ import hashlib
 import typing
 import json
 
-class FileCache(AbstractCache):
+class FileCache(JsonCache):
 
     def json_cache(self):
         '''
