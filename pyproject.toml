@@ -1,0 +1,22 @@
+[project]
+name = "FileCache"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Topi Aaltonen", email = "aaltopi@gmail.com"},
+]
+dependencies = [
+]
+requires-python = "==3.12.5"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "ipykernel>=6.29.5",
+]
