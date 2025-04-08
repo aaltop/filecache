@@ -1,3 +1,9 @@
+'''
+FunctionCache: Class that can be used to wrap functions, caching
+their invocations and allowing saving and loading this cache from
+file. 
+'''
+
 from functools import wraps
 import inspect
 from typing import (
@@ -18,10 +24,14 @@ from src.utils.inspect import (
 
 class CacheLookup(NamedTuple):
     '''
-    `function_hash` is used as key in a `FunctionCache` cache,
-    `input` contains the input arguments to the function,
-    `output` contains the previous output from the function
-    with the same input arguments.
+    Attributes:
+        function_hash:
+            Used as key in a `FunctionCache` cache
+        input:
+            Contains the input arguments to the function
+        output:
+            Contains the previous output from the function
+            with the same input arguments.
     '''
     function_hash: str
     input: dict

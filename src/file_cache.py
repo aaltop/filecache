@@ -1,11 +1,18 @@
-from .utils.path import expand_directories, match_all
-from .json_cache import JsonCache
+'''
+Cacher that tracks the state of files by their hash digest.
+'''
+
 
 from pathlib import Path
 import os
 import hashlib
-import typing
+from typing import (
+    Self
+)
 import json
+
+from .utils.path import expand_directories, match_all
+from .json_cache import JsonCache
 
 class FileCache(JsonCache):
 
@@ -31,9 +38,9 @@ class FileCache(JsonCache):
     
     def hash_files(
             self,
-            paths:list[os.PathLike],
+            paths: list[os.PathLike],
             match_patterns: list[str] | list[Path] = None,
-            depth = 0) -> typing.Self:
+            depth = 0) -> Self:
         '''
         Hash the files pointed to by the paths in `paths`. If a path
         is a folder, hash all the files in that folder (and subfolders
@@ -57,7 +64,7 @@ class FileCache(JsonCache):
 
         return self
 
-    def load(self, path:Path = None, relative = True) -> dict:
+    def load(self, path: Path = None, relative = True) -> dict:
         '''
         Load the state as saved by `save()`. If `relative`,
         compute the file paths relative to current working directory.

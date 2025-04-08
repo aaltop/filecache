@@ -1,6 +1,6 @@
 from pathlib import Path
 
-def path_depth(base_path:Path, child_path:Path):
+def path_depth(base_path: Path, child_path: Path):
     '''
     Find the depth of the path `child_path` under
     `base_path`. Assumes `child_path` is actually
@@ -26,7 +26,7 @@ def get_files(base_dir: Path, depth = 0) -> list[Path]:
 
     return files
 
-def expand_directories(paths:list[Path], depth = 0):
+def expand_directories(paths: list[Path], depth = 0):
     '''
     Expand a list of file-likes to only contain actual files,
     effectively expanding the directories in the list, if any are present.
@@ -43,7 +43,7 @@ def expand_directories(paths:list[Path], depth = 0):
     return flattened_paths
 
 
-def match_all(path:Path, patterns, case_sensitive = None):
+def match_all(path: Path, patterns, case_sensitive = None):
     '''
     for matching multiple patterns against a path; see `PurePath.match()`.
     '''

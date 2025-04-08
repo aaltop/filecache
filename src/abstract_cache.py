@@ -81,7 +81,7 @@ class AbstractCache(abc.ABC):
         }
     
     @abc.abstractmethod
-    def save(self, path:Path = None) -> Self:
+    def save(self, path: Path = None) -> Self:
         '''
         Save the state.
 
@@ -89,7 +89,7 @@ class AbstractCache(abc.ABC):
         '''
     
     @abc.abstractmethod
-    def load(self, path:Path = None) -> dict:
+    def load(self, path: Path = None) -> dict:
         '''
         Load the state as saved by `save()`.
 

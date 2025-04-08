@@ -1,14 +1,17 @@
+'''
+Base class that saves its cache as JSON.
+'''
+
 import hashlib
 import abc
 from pathlib import Path
 import json
 
-
 from .abstract_cache import AbstractCache
 
 class JsonCache(AbstractCache):
 
-    def __init__(self, hasher=lambda : hashlib.sha256(usedforsecurity=False), save_path=None):
+    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
         super().__init__(hasher, save_path)
 
         self.save_path = (
@@ -34,7 +37,7 @@ class JsonCache(AbstractCache):
             "cache": self.json_cache()
         }
     
-    def save(self, path:Path = None, json_kwargs: dict = None):
+    def save(self, path: Path = None, json_kwargs: dict = None):
         '''
         Save the state as a json file.
         '''
@@ -48,7 +51,7 @@ class JsonCache(AbstractCache):
 
         return self
     
-    def load(self, path:Path = None) -> dict:
+    def load(self, path: Path = None) -> dict:
         '''
         Load the state as saved by `save()`.
         '''

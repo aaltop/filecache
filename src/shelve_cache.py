@@ -1,5 +1,8 @@
-from typing import Self
+'''
+Class that saves its cache using the shelve module.
+'''
 
+from typing import Self
 
 from .abstract_cache import AbstractCache
 from src.utils.shelve import load_dict, save_dict
