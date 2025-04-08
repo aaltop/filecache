@@ -1,4 +1,8 @@
+import pandas as pd
+import pytest
+
 from pathlib import Path
+import string
 
 from src.function_cache import FunctionCache
 
@@ -28,7 +32,10 @@ def test_wrapped_function(tmp_path: Path):
 # a way to lookup what the function points to directly in the cache,
 # though the end user would ultimately not care about the cacher at all,
 # really.
-def test_caching(tmp_path: Path):
+def test_caching_simple(tmp_path: Path):
+    '''
+    Test caching with basic Python data type.
+    '''
 
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
@@ -43,12 +50,99 @@ def test_caching(tmp_path: Path):
     string_value = "this is a string_value"
     return_value = dummy_function(string_value)
     
-    _, value = list(function_cache.cache.items())[0]
-
+    # test normally
+    deq = list(function_cache.cache.values())[0]
+    value = deq[0]
     assert value["input"] == {
         "string_value": string_value,
         "list_of_ints": [1,2,3]
     }
     assert value["output"] == return_value
 
+    # test save and load
+    function_cache.save()
+    function_cache.cache = function_cache.load()
+
+    deq = list(function_cache.cache.values())[0]
+    value = deq[0]
+    assert value["input"] == {
+        "string_value": string_value,
+        "list_of_ints": [1,2,3]
+    }
+    assert value["output"] == return_value
+
+def test_caching_complex(tmp_path: Path):
+    '''
+    Test caching with a more complex value.
+    '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCache(save_path = cache_path)
+
+    @function_cache()
+    def dummy_function(capital = False):
+    
+        letters = string.ascii_uppercase if capital else string.ascii_lowercase
+        return pd.DataFrame(dict(
+            idx = range(len(letters)),
+            letters = letters
+        ))
+    
+    # test first that it looks okay normally
+    return_value = dummy_function()
+    deq = list(function_cache.cache.values())[0]
+    value = deq[0]
+    assert value["input"] == dict(capital = False)
+    assert (value["output"] == return_value).all().all()
+
+    # test save and load
+    function_cache.save()
+    function_cache.cache = function_cache.load()
+    deq = list(function_cache.cache.values())[0]
+    value = deq[0]
+    assert value["input"] == dict(capital = False)
+    assert (value["output"] == return_value).all().all()
+    
+
+def test_is_cached(tmp_path: Path):
+    '''
+    Test that the return value is actually cached, i.e. that
+    the function is not unnecessarily invoked again.
+    '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCache(save_path = cache_path)
+
+    mutated = 0
+
+    @function_cache()
+    def mutate(dummy_val = 0):
+
+        nonlocal mutated
+        mutated += 1
+        return mutated
+
+    assert 1 == mutate()
+    assert mutated == 1
+    # second call uses cached value, no mutation
+    assert 1 == mutate()
+    assert mutated == 1
+    print(function_cache.cache)
+    # passing in new argument changes value
+    assert 2 == mutate(dummy_val = 1)
+    assert mutated == 2
+    print(function_cache.cache)
+    # again, cached value when calling with original argument
+    assert 1 == mutate()
+    assert mutated == 2
+
+@pytest.mark.skip("Not implemented")
+def test_cache_size(tmp_path: Path):
+    '''
+    Test setting cache size works.
+    '''
 

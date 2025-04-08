@@ -10,6 +10,7 @@ from typing import (
     NamedTuple, Any
 )
 from collections.abc import Callable
+from collections import deque
 
 import logging
 logger = logging.getLogger(__name__)
@@ -64,17 +65,27 @@ class FunctionCache(ShelveCache):
         bound_args = bind_arguments(func, args, kwargs)
 
         # look for previous output that matches the function and call signature
-        try:
-            previous_args = self.cache[function_hash]["input"]
-            if previous_args == bound_args:
-                previous_output = self.cache[function_hash]["output"]
+        if function_hash in self.cache:
+            for input_output in self.cache[function_hash]:
+                previous_args = input_output["input"]
+                if not (previous_args == bound_args):
+                    continue
+                # move the found cache value to the front of the deque
+                # ----------------------------------------------------
+                deq: deque = self.cache[function_hash]
+                # not going to continue the loop, so doesn't matter
+                deq.remove(input_output)
+                deq.appendleft(input_output)
+                # ===================================================
+                previous_output = input_output["output"]
                 logger.debug("Found previous value, returning early")
                 return CacheLookup(function_hash, bound_args, previous_output)
-        except LookupError:
-            logger.debug("No previous data")
-            pass
 
-        self.cache[function_hash] = {"input": bound_args, "output": None}
+        else:
+            self.cache[function_hash] = deque(maxlen = None)
+
+        # should be that there is key of <function_hash> yet
+        self.cache[function_hash].appendleft({"input": bound_args, "output": None})
         return CacheLookup(function_hash, bound_args, None)
     
     def __call__(self):
@@ -90,7 +101,9 @@ class FunctionCache(ShelveCache):
                     return output
                 
                 output = func(*args, **kwargs)
-                self.cache[function_hash] |= {"output": output}
+                # the new invocation should be the first item
+                # (most recently used)
+                self.cache[function_hash][0] |= {"output": output}
                 return output
             
             return wrapper_func
