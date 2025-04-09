@@ -7,9 +7,9 @@ import abc
 from pathlib import Path
 import json
 
-from .abstract_cache import AbstractCache
+from .abstract_cacher import AbstractCacher
 
-class JsonCache(AbstractCache):
+class JsonCacher(AbstractCacher):
 
     def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path = None):
         super().__init__(hasher, save_path)

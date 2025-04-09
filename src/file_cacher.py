@@ -12,9 +12,9 @@ from typing import (
 import json
 
 from .utils.path import expand_directories, match_all
-from .json_cache import JsonCache
+from .json_cacher import JsonCacher
 
-class FileCache(JsonCache):
+class FileCache(JsonCacher):
 
     def json_cache(self):
         '''

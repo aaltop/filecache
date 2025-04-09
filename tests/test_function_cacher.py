@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 import string
 
-from src.function_cache import FunctionCache
+from src.function_cacher import FunctionCacher
 
 # NOTE: tmp_path is a pytest thing
 def test_wrapped_function(tmp_path: Path):
@@ -15,7 +15,7 @@ def test_wrapped_function(tmp_path: Path):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
 
-    function_cache = FunctionCache(save_path = cache_path)
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function(string_value):
@@ -40,7 +40,7 @@ def test_caching_simple(tmp_path: Path):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
 
-    function_cache = FunctionCache(save_path = cache_path)
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function(string_value, list_of_ints = [1, 2, 3]):
@@ -79,7 +79,7 @@ def test_caching_complex(tmp_path: Path):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
 
-    function_cache = FunctionCache(save_path = cache_path)
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function(capital = False):
@@ -115,7 +115,7 @@ def test_is_cached(tmp_path: Path):
     cache_path = tmp_path / "cache"
     cache_path.mkdir()
 
-    function_cache = FunctionCache(save_path = cache_path)
+    function_cache = FunctionCacher(save_path = cache_path)
 
     mutated = 0
 

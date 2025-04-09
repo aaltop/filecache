@@ -23,7 +23,7 @@ def compare_dict_values(dict1, dict2):
     return comp
 
 
-class AbstractCache(abc.ABC):
+class AbstractCacher(abc.ABC):
 
     name_as_snake = None
 

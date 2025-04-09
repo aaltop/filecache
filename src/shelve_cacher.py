@@ -4,10 +4,10 @@ Class that saves its cache using the shelve module.
 
 from typing import Self
 
-from .abstract_cache import AbstractCache
+from .abstract_cacher import AbstractCacher
 from src.utils.shelve import load_dict, save_dict
 
-class ShelveCache(AbstractCache):
+class ShelveCacher(AbstractCacher):
     '''
     Uses the shelve module to save and load pickled cache data from
     file.

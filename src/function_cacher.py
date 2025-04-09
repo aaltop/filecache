@@ -7,7 +7,7 @@ file.
 from functools import wraps
 import inspect
 from typing import (
-    NamedTuple, Any
+    NamedTuple, Any, TypedDict
 )
 from collections.abc import Callable
 from collections import deque
@@ -15,7 +15,7 @@ from collections import deque
 import logging
 logger = logging.getLogger(__name__)
 
-from .shelve_cache import ShelveCache
+from .shelve_cacher import ShelveCacher
 from src.utils.inspect import (
     function_hash as hash_function,
     bind_arguments
@@ -38,20 +38,40 @@ class CacheLookup(NamedTuple):
     input: dict
     output: Any = None
 
+class InputOutputDict(TypedDict):
+
+
+    input: Any
+    output: Any
 
 # TODO:
 # Another issue maybe how to work with methods. Just add an option
 # to the wrapper for wrapping a method instead?  
-class FunctionCache(ShelveCache):
+class FunctionCacher(ShelveCacher):
     '''
     Class for caching the output from a function, such that the cache
     may also be saved to file.
 
-    <self.cache> has function hashes (hex strings of the hash of the function
-    body) as keys, with each item being a dictionary of keys ("input","output")
-    whose values match the input to a function and the output from
-    a function.
+    Properties:
+        cache:
+            Contains the cached data.
     '''
+
+    def __init__(self, cache_size: int | None = None, *args, **kwargs):
+        '''
+        
+        Arguments:
+            cache_size:
+                How large the LRU cache should be. Currently will affect
+                only fresh function invocations: if a function invocation
+                is already cached, the deque's max length has already
+                been set.
+        '''
+
+        super().__init__(*args, **kwargs)
+        self.cache: dict[str, deque[InputOutputDict]]
+
+        self.cache_size = cache_size
 
     def lookup_function(self, func: Callable, args, kwargs) -> CacheLookup:
         '''
@@ -72,7 +92,7 @@ class FunctionCache(ShelveCache):
                     continue
                 # move the found cache value to the front of the deque
                 # ----------------------------------------------------
-                deq: deque = self.cache[function_hash]
+                deq = self.cache[function_hash]
                 # not going to continue the loop, so doesn't matter
                 deq.remove(input_output)
                 deq.appendleft(input_output)
@@ -82,7 +102,7 @@ class FunctionCache(ShelveCache):
                 return CacheLookup(function_hash, bound_args, previous_output)
 
         else:
-            self.cache[function_hash] = deque(maxlen = None)
+            self.cache[function_hash] = deque(maxlen = self.cache_size)
 
         # should be that there is key of <function_hash> yet
         self.cache[function_hash].appendleft({"input": bound_args, "output": None})
