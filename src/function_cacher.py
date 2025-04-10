@@ -7,7 +7,7 @@ file.
 from functools import wraps
 import inspect
 from typing import (
-    NamedTuple, Any, TypedDict
+    NamedTuple, Any, TypedDict, override
 )
 from collections.abc import Callable
 from collections import deque
@@ -20,6 +20,7 @@ from src.utils.inspect import (
     function_hash as hash_function,
     bind_arguments
 )
+from .deque_cache import DequeCache
 
 
 
@@ -44,6 +45,10 @@ class InputOutputDict(TypedDict):
     input: Any
     output: Any
 
+def _compare_inputs(expected_input, deque_object: InputOutputDict):
+
+    return expected_input == deque_object["input"]
+
 # TODO:
 # Another issue maybe how to work with methods. Just add an option
 # to the wrapper for wrapping a method instead?  
@@ -62,16 +67,30 @@ class FunctionCacher(ShelveCacher):
         
         Arguments:
             cache_size:
-                How large the LRU cache should be. Currently will affect
-                only fresh function invocations: if a function invocation
-                is already cached, the deque's max length has already
-                been set.
+                How large the LRU caches should be.
         '''
 
         super().__init__(*args, **kwargs)
-        self.cache: dict[str, deque[InputOutputDict]]
-
+        self.cache: DequeCache # needs a little help with the typing
+        self.cache.compare_deque_objects = _compare_inputs
+        self._cache_size: int | None = None
         self.cache_size = cache_size
+
+    @override
+    @classmethod
+    def new_cache(self):
+        return DequeCache()
+    
+    @property
+    def cache_size(self):
+        return self._cache_size
+    
+    @cache_size.setter
+    def cache_size(self, value):
+
+        self.cache.max_size = value
+        self._cache_size = self.cache.max_size
+
 
     def lookup_function(self, func: Callable, args, kwargs) -> CacheLookup:
         '''
@@ -86,25 +105,14 @@ class FunctionCacher(ShelveCacher):
 
         # look for previous output that matches the function and call signature
         if function_hash in self.cache:
-            for input_output in self.cache[function_hash]:
-                previous_args = input_output["input"]
-                if not (previous_args == bound_args):
-                    continue
-                # move the found cache value to the front of the deque
-                # ----------------------------------------------------
-                deq = self.cache[function_hash]
-                # not going to continue the loop, so doesn't matter
-                deq.remove(input_output)
-                deq.appendleft(input_output)
-                # ===================================================
+            try:
+                input_output: InputOutputDict = self.cache.find_cached_item(function_hash, bound_args)
                 previous_output = input_output["output"]
-                logger.debug("Found previous value, returning early")
                 return CacheLookup(function_hash, bound_args, previous_output)
+            except LookupError:
+                logger.debug("No previous value found")
+                pass
 
-        else:
-            self.cache[function_hash] = deque(maxlen = self.cache_size)
-
-        # should be that there is key of <function_hash> yet
         self.cache[function_hash].appendleft({"input": bound_args, "output": None})
         return CacheLookup(function_hash, bound_args, None)
     

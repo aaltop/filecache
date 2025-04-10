@@ -13,6 +13,9 @@ class ShelveCacher(AbstractCacher):
     file.
     '''
 
+    @classmethod
+    def new_cache(self):
+        return {}
 
     def save(self, path = None) -> Self:
         

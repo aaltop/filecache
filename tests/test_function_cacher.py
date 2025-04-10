@@ -140,9 +140,43 @@ def test_is_cached(tmp_path: Path):
     assert 1 == mutate()
     assert mutated == 2
 
-@pytest.mark.skip("Not implemented")
 def test_cache_size(tmp_path: Path):
     '''
-    Test setting cache size works.
+    Test that setting cache size works for new items.
     '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
+
+    @function_cache()
+    def dummy_function(dummy_val):
+
+        return dummy_val + 1
+    
+    function_cache.cache_size = 3
+    for i in range(5): dummy_function(i)
+    assert len(next(iter(function_cache.cache.values()))) == 3
+
+def test_cache_size_dynamic(tmp_path: Path):
+    '''
+    Test that setting cache size works dynamically.
+    '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
+
+    @function_cache()
+    def dummy_function(dummy_val):
+
+        return dummy_val + 1
+    
+    for i in range(5): dummy_function(i)
+    assert len(next(iter(function_cache.cache.values()))) == 5
+    function_cache.cache_size = 3
+    assert len(next(iter(function_cache.cache.values()))) == 3
+
 

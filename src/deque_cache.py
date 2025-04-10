@@ -14,7 +14,7 @@ type ComparisonFunc = Callable[[Any, Any], bool]
 
 class DequeCache(defaultdict):
     '''
-    Holds cached items in deques. Allows deques'
+    Defaultdict that holds cached items in deques. Allows deques'
     max length to be changed dynamically. In the deques, most recently
     used item should be on the left.
     '''
@@ -81,7 +81,7 @@ class DequeCache(defaultdict):
 
     def find_cached_item(self, key, comp_value: Any, comp_function: ComparisonFunc | None = None):
         '''
-
+        Find the cached item in the deque pointed to by `key`.
         Arguments:
             key:
                 Key to use to get the relevant deque.

@@ -1,11 +1,13 @@
 import abc
 import hashlib
 from pathlib import Path
-from typing import Self
+from typing import Self, Any
 
 from src.utils.string import pascal_to_snake_case
 
-def compare_dict_values(dict1, dict2):
+type CacheObject = Any
+
+def compare_dict_values(dict1: dict, dict2: dict):
     '''
     Compare the values in dict1 and dict2.
     Returns a dictionary with each key in dict1
@@ -46,20 +48,13 @@ class AbstractCacher(abc.ABC):
             self._calculate_name()
 
         self.hasher = hasher
-        self.cache = {}
+        self.cache = self.new_cache()
         self.save_path = (
             Path() / self.name_as_snake / "cache"
             if save_path is None 
             else save_path
         )
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
-        
-        try:
-            # assume database already exists
-            self.cache = self.load()
-        except FileNotFoundError:
-            # create database
-            self.save()
 
     def metadata(self) -> dict:
         '''
@@ -80,6 +75,13 @@ class AbstractCacher(abc.ABC):
             "cache": self.cache
         }
     
+    @classmethod
+    @abc.abstractmethod
+    def new_cache(self) -> CacheObject:
+        '''
+        Return a new cache object.
+        '''
+    
     @abc.abstractmethod
     def save(self, path: Path = None) -> Self:
         '''
@@ -89,20 +91,20 @@ class AbstractCacher(abc.ABC):
         '''
     
     @abc.abstractmethod
-    def load(self, path: Path = None) -> dict:
+    def load(self, path: Path = None) -> CacheObject:
         '''
         Load the state as saved by `save()`.
 
         If `path` is None, defaults to self.save_path.
         '''
 
-    def compare_hashes(self, other = None):
-        '''
-        Compare the values in `self.cache` and in `other`.
+    # def compare_hashes(self, other = None):
+    #     '''
+    #     Compare the values in `self.cache` and in `other`.
 
-        By default `other` is gotten using `self.load()`.
-        '''
+    #     By default `other` is gotten using `self.load()`.
+    #     '''
 
-        other = self.load() if other is None else other
+    #     other = self.load() if other is None else other
 
-        return compare_dict_values(self.cache, other)
+    #     return compare_dict_values(self.cache, other)
