@@ -16,7 +16,7 @@ def test_folder_text():
 
 
 def test_hashing(tmp_path, test_folder_text):
-    '''Test that hashing files works'''
+    '''Hashing files works'''
 
     content_folder = tmp_path / "content"
     write_dict_files(content_folder, test_folder_text)
@@ -38,7 +38,7 @@ def test_hashing(tmp_path, test_folder_text):
 
 
 def test_comparison(tmp_path, test_folder_text):
-    '''Test that comparing caches works'''
+    '''Comparing caches works'''
 
     content_folder = tmp_path / "content"
     write_dict_files(content_folder, test_folder_text)
@@ -63,3 +63,16 @@ def test_comparison(tmp_path, test_folder_text):
     # all others not
     assert all(is_different.values())
     # =============================================================
+
+def test_save_and_load(tmp_path, test_folder_text):
+    '''Saving and loading works'''
+
+    content_folder = tmp_path / "content"
+    write_dict_files(content_folder, test_folder_text)
+    cache_path = tmp_path / "cache"
+    file_cacher = FileCacher(save_path = cache_path)
+
+    file_cacher.hash_files([content_folder], depth = 1)
+    assert len(file_cacher.cache) == 3
+    file_cacher.save()
+    assert file_cacher.cache == file_cacher.load(relative = False)

@@ -51,7 +51,7 @@ class JsonCacher(AbstractCacher):
 
         path.parents[0].mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
-            json.dump(self.get_state(), f, **json_kwargs)
+            json.dump(self.get_json_state(), f, **json_kwargs)
 
         return self
     
