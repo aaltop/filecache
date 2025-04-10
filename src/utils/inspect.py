@@ -1,6 +1,7 @@
 import inspect as base_inspect
 from collections.abc import Callable
 from hashlib import sha256
+from typing import Any
 
 from src.typing import Hasher
 
@@ -31,3 +32,14 @@ def bind_arguments(func: Callable, args, kwargs):
     bound_args = sig.bind(*args, **kwargs)
     bound_args.apply_defaults()
     return bound_args.arguments
+
+def unique_name(obj: Callable | Any):
+    '''
+    Return a unique name for `obj`.
+
+    Arguments:
+        obj:
+            Function, method or class.
+    '''
+
+    return f"{obj.__module__}.{obj.__qualname__}"

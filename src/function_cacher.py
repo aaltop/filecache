@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 from .shelve_cacher import ShelveCacher
 from src.utils.inspect import (
     function_hash as hash_function,
-    bind_arguments
+    bind_arguments, unique_name
 )
 from .deque_cache import DequeCache
 
@@ -41,7 +41,6 @@ class CacheLookup(NamedTuple):
 
 class InputOutputDict(TypedDict):
 
-
     input: Any
     output: Any
 
@@ -60,6 +59,8 @@ class FunctionCacher(ShelveCacher):
     Properties:
         cache:
             Contains the cached data.
+        cache_size:
+            The currently set size of the deques in the cache.
     '''
 
     def __init__(self, cache_size: int | None = None, *args, **kwargs):
@@ -75,6 +76,8 @@ class FunctionCacher(ShelveCacher):
         self.cache.compare_deque_objects = _compare_inputs
         self._cache_size: int | None = None
         self.cache_size = cache_size
+        
+        self._function_name_to_hash: dict[str, str] = {}
 
     @override
     @classmethod
@@ -91,6 +94,8 @@ class FunctionCacher(ShelveCacher):
         self.cache.max_size = value
         self._cache_size = self.cache.max_size
 
+    def hash_function(self, func):
+        return hash_function(func, hasher = self.hasher())
 
     def lookup_function(self, func: Callable, args, kwargs) -> CacheLookup:
         '''
@@ -99,8 +104,7 @@ class FunctionCacher(ShelveCacher):
         Mainly used internally.
         '''
 
-        hasher = self.hasher()
-        function_hash = hash_function(func, hasher = hasher)
+        function_hash = self.hash_function(func)
         bound_args = bind_arguments(func, args, kwargs)
 
         # look for previous output that matches the function and call signature
@@ -120,6 +124,11 @@ class FunctionCacher(ShelveCacher):
 
         def inner_wrapper(func):
 
+            # initialise the cache
+            function_hash = self.hash_function(func)
+            self.cache[function_hash]
+            self._function_name_to_hash[unique_name(func)] = function_hash
+
             @wraps(func)
             def wrapper_func(*args, **kwargs):
 
@@ -138,4 +147,10 @@ class FunctionCacher(ShelveCacher):
         
         return inner_wrapper
 
+    def get_cached_data(self, func: Callable) -> deque[InputOutputDict]:
+        '''
+        Get the cached data of `func`.
+        '''
 
+        function_hash = self._function_name_to_hash[unique_name(func)]
+        return self.cache[function_hash]

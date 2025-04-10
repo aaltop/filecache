@@ -3,13 +3,14 @@ import pytest
 
 from pathlib import Path
 import string
+from collections import deque
 
 from src.function_cacher import FunctionCacher
 
 # NOTE: tmp_path is a pytest thing
 def test_wrapped_function(tmp_path: Path):
     '''
-    Test that the wrapped function works.
+    The wrapped function works.
     '''
 
     cache_path = tmp_path / "cache"
@@ -108,7 +109,7 @@ def test_caching_complex(tmp_path: Path):
 
 def test_is_cached(tmp_path: Path):
     '''
-    Test that the return value is actually cached, i.e. that
+    The return value is actually cached, i.e. that
     the function is not unnecessarily invoked again.
     '''
 
@@ -142,7 +143,7 @@ def test_is_cached(tmp_path: Path):
 
 def test_cache_size(tmp_path: Path):
     '''
-    Test that setting cache size works for new items.
+    Setting cache size works for new items.
     '''
 
     cache_path = tmp_path / "cache"
@@ -161,7 +162,7 @@ def test_cache_size(tmp_path: Path):
 
 def test_cache_size_dynamic(tmp_path: Path):
     '''
-    Test that setting cache size works dynamically.
+    Setting cache size works dynamically.
     '''
 
     cache_path = tmp_path / "cache"
@@ -180,3 +181,22 @@ def test_cache_size_dynamic(tmp_path: Path):
     assert len(next(iter(function_cache.cache.values()))) == 3
 
 
+def test_lookup_function_cache():
+    '''
+    Function's cached data can be looked up.
+    '''
+
+    function_cache = FunctionCacher()
+
+    @function_cache()
+    def dummy_function(dummy_val):
+        return dummy_val + 1
+    
+    cached_data = function_cache.get_cached_data(dummy_function)
+    assert isinstance(cached_data, deque)
+    assert len(cached_data) == 0
+    dummy_function(0)
+    cached_data = function_cache.get_cached_data(dummy_function)
+    assert len(cached_data) == 1
+    assert "input" in cached_data[0]
+    assert "output" in cached_data[0]
