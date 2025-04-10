@@ -16,6 +16,7 @@ def test_folder_text():
 
 
 def test_hashing(tmp_path, test_folder_text):
+    '''Test that hashing files works'''
 
     content_folder = tmp_path / "content"
     write_dict_files(content_folder, test_folder_text)
@@ -34,3 +35,31 @@ def test_hashing(tmp_path, test_folder_text):
     assert len(file_cacher.cache) == 3
     for file_name in file_cacher.cache:
         assert file_name.stem in ["file1", "file2"]
+
+
+def test_comparison(tmp_path, test_folder_text):
+    '''Test that comparing caches works'''
+
+    content_folder = tmp_path / "content"
+    write_dict_files(content_folder, test_folder_text)
+    cache_path = tmp_path / "cache"
+    file_cacher = FileCacher(save_path = cache_path)
+
+    # take just the top file(s)
+    file_cacher.hash_files([content_folder])
+
+    file_cacher_newer = FileCacher(save_path = cache_path)
+    # hash further down
+    file_cacher_newer.hash_files([content_folder], depth = 1)
+
+    # test that newer cacher has deeper values that are not matched
+    # -------------------------------------------------------------
+    is_different = file_cacher_newer.compare_caches(file_cacher.cache)
+    assert len(is_different) == 3
+    top_path = list(file_cacher.cache)[0]
+    # top path file the same
+    assert not is_different[top_path]
+    del is_different[top_path]
+    # all others not
+    assert all(is_different.values())
+    # =============================================================

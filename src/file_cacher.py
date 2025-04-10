@@ -10,12 +10,15 @@ import json
 
 from .utils.path import expand_directories, match_all
 from .json_cacher import JsonCacher
+from src.mixin.abstract_cache_comparison import AbstractCacheComparisonMixin
+from src.utils.dict import compare_dict_values
 
-class FileCacher(JsonCacher):
+type Cache = dict[Path, str]
+class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cache: dict[Path, str]
+        self.cache: Cache
 
     def json_cache(self):
         '''
@@ -86,3 +89,8 @@ class FileCacher(JsonCacher):
             convert_path(file_path): digest
             for file_path, digest in saved_cache["cache"].items()
         }
+
+    def compare_caches(self, other: Cache | None = None) -> dict[Path, bool]:
+
+        other = self.load() if other is None else other
+        return compare_dict_values(self.cache, other)
