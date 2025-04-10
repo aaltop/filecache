@@ -12,9 +12,9 @@ def test_deque_added_automatically():
 
     deq = DequeCache()
 
-    assert len(deq._cache) == 0
+    assert len(deq) == 0
     deq["dummy_key"]
-    assert len(deq._cache) == 1
+    assert len(deq) == 1
     assert isinstance(deq["dummy_key"], deque)
 
 @pytest.mark.parametrize(

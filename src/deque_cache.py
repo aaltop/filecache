@@ -12,9 +12,9 @@ def maxlen(value: int | None) -> int | None:
 
 type ComparisonFunc = Callable[[Any, Any], bool]
 
-class DequeCache:
+class DequeCache(defaultdict):
     '''
-    Holds cached items in deques in a dictionary. allows deques'
+    Holds cached items in deques. Allows deques'
     max length to be changed dynamically. In the deques, most recently
     used item should be on the left.
     '''
@@ -23,7 +23,7 @@ class DequeCache:
     def __init__(
         self,
         max_size: int | None = None,
-        compare_deque_obj: ComparisonFunc | None = None
+        compare_deque_obj: ComparisonFunc | None = None,
     ):
         '''
         Arguments:
@@ -37,13 +37,13 @@ class DequeCache:
                 function.
         '''
 
+        self._max_size = maxlen(max_size)
+        super().__init__(lambda: deque(maxlen = self.max_size))
         self.compare_deque_objects: ComparisonFunc = (
             lambda one, two: one == two
             if compare_deque_obj is None
             else compare_deque_obj
         )
-        self._max_size = maxlen(max_size)
-        self._cache: dict[str, deque] = defaultdict(lambda: deque(maxlen = self.max_size))
         self._move_newest_to_front = True
 
 
@@ -60,15 +60,11 @@ class DequeCache:
         else:
             self._max_size = int(value)
 
-        for key in self._cache:
+        for key in self:
             new_deque = deque(maxlen = self._max_size)
             # Maintain order by reversing, extending from left
-            new_deque.extendleft(reversed(self._cache[key]))
-            self._cache[key] = new_deque
-
-    def __getitem__(self, key):
-
-        return self._cache[key]
+            new_deque.extendleft(reversed(self[key]))
+            self[key] = new_deque
 
     @contextmanager
     def no_moving_recent_to_front(self) -> Generator[Self, None, None]:
@@ -111,12 +107,12 @@ class DequeCache:
             if not (comp_function is None)
             else self.compare_deque_objects
         )
-        for i, deq_ob in enumerate(self._cache[key]):
+        for i, deq_ob in enumerate(self[key]):
             if comp_function(comp_value, deq_ob):
                 # move the accessed object to the front
                 if self._move_newest_to_front:
-                    del self._cache[key][i]
-                    self._cache[key].appendleft(deq_ob)
+                    del self[key][i]
+                    self[key].appendleft(deq_ob)
                 return deq_ob
         
         raise LookupError("No matching deque value found")
