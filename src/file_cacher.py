@@ -6,15 +6,16 @@ Cacher that tracks the state of files by their hash digest.
 from pathlib import Path
 import os
 import hashlib
-from typing import (
-    Self
-)
 import json
 
 from .utils.path import expand_directories, match_all
 from .json_cacher import JsonCacher
 
-class FileCache(JsonCacher):
+class FileCacher(JsonCacher):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cache: dict[Path, str]
 
     def json_cache(self):
         '''
@@ -22,25 +23,23 @@ class FileCache(JsonCacher):
         '''
         return {str(file.absolute()): digest for file, digest in self.cache.items()}
 
-    def hash_file(self, file: os.PathLike):
+    def hash_file(self, file: Path):
+        '''
+        Add a hash of the contents of `file` to cache.
+        '''
 
         with open(file, "rb") as f:
             hash_object = hashlib.file_digest(f, self.hasher)
 
-        digest = hash_object.hexdigest()
-        self.cache[file] = digest
-
-        return {
-            "file": file,
-            "digest": digest,
-            "hash_object": hash_object
-        }
+        self.cache[file] = hash_object.hexdigest()
+        return self
     
     def hash_files(
-            self,
-            paths: list[os.PathLike],
-            match_patterns: list[str] | list[Path] = None,
-            depth = 0) -> Self:
+        self,
+        paths: list[Path],
+        match_patterns: list[os.PathLike] | None = None,
+        depth = 0
+    ):
         '''
         Hash the files pointed to by the paths in `paths`. If a path
         is a folder, hash all the files in that folder (and subfolders
@@ -58,9 +57,8 @@ class FileCache(JsonCacher):
                 flattened_paths
             )
 
-        path: Path
         for path in flattened_paths:
-            self.hash_file(path).values()
+            self.hash_file(path)
 
         return self
 

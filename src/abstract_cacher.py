@@ -1,11 +1,9 @@
 import abc
 import hashlib
 from pathlib import Path
-from typing import Self, Any
+from typing import Self, Any, TypedDict
 
 from src.utils.string import pascal_to_snake_case
-
-type CacheObject = Any
 
 def compare_dict_values(dict1: dict, dict2: dict):
     '''
@@ -24,6 +22,17 @@ def compare_dict_values(dict1: dict, dict2: dict):
     
     return comp
 
+type CacheObject = Any
+
+class MetadataDict(TypedDict):
+
+    hash_algorithm: str
+
+class StateDict(TypedDict):
+
+    metadata: MetadataDict
+    cache: CacheObject
+    
 
 class AbstractCacher(abc.ABC):
 
@@ -34,14 +43,18 @@ class AbstractCacher(abc.ABC):
 
         cls.name_as_snake = pascal_to_snake_case(cls.__name__)
 
-    def __init__(self, hasher = lambda: hashlib.sha256(usedforsecurity=False), save_path: Path = None):
+    def __init__(self, save_path: Path = None, *, hasher = lambda: hashlib.sha256(usedforsecurity=False)):
         '''
-        `hasher` is expected to be a hashlib-type hasher factory.
 
-        `save_path` is the path to save the cache to, by default 
-        "./{class_name}/cache", where {class_name} is the name
-        of the class in snake case. (Assumes that the class name is
-        Pascal case.)
+        Arguments:
+            save_path:
+                The path to save the cache to, by default 
+                "./{class_name}/cache", where {class_name} is the name
+                of the class in snake case. (Assumes that the class name is
+                Pascal case.)
+            hasher:
+                Factory returning a hashlib-type hasher.
+
         '''
 
         if self.name_as_snake is None:
@@ -56,7 +69,7 @@ class AbstractCacher(abc.ABC):
         )
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
 
-    def metadata(self) -> dict:
+    def metadata(self) -> MetadataDict:
         '''
         Get metadata about this cacher.
         '''
@@ -65,7 +78,7 @@ class AbstractCacher(abc.ABC):
             "hash_algorithm": self.hasher().name
         }
     
-    def get_state(self) -> dict:
+    def get_state(self) -> StateDict:
         '''
         Get all data relevant to the cacher.
         '''
