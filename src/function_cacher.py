@@ -100,7 +100,7 @@ class FunctionCacher(ShelveCacher):
         '''
 
         hasher = self.hasher()
-        function_hash = hash_function(hasher, func)
+        function_hash = hash_function(func, hasher = hasher)
         bound_args = bind_arguments(func, args, kwargs)
 
         # look for previous output that matches the function and call signature

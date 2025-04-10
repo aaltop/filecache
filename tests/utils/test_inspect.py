@@ -14,7 +14,7 @@ def test_function_hash():
 
     hasher = sha256(usedforsecurity = False)
 
-    hexdigest = inspect.function_hash(hasher, dummy_function)
+    hexdigest = inspect.function_hash(dummy_function, hasher = hasher)
 
     function_body = '    def dummy_function():\n\n        return "Hello, dummy"\n'
     

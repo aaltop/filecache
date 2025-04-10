@@ -1,9 +1,10 @@
 import abc
 import hashlib
 from pathlib import Path
-from typing import Self, Any, TypedDict
+from typing import Self, Any, TypedDict, Callable
 
 from src.utils.string import pascal_to_snake_case
+from src.typing import Hasher
 
 type CacheObject = Any
 
@@ -26,7 +27,7 @@ class AbstractCacher(abc.ABC):
 
         cls.name_as_snake = pascal_to_snake_case(cls.__name__)
 
-    def __init__(self, save_path: Path = None, *, hasher = lambda: hashlib.sha256(usedforsecurity=False)):
+    def __init__(self, save_path: Path = None, *, hasher: Callable[[], Hasher] = lambda: hashlib.sha256(usedforsecurity=False)):
         '''
 
         Arguments:
@@ -93,14 +94,3 @@ class AbstractCacher(abc.ABC):
 
         If `path` is None, defaults to self.save_path.
         '''
-
-    # def compare_hashes(self, other = None):
-    #     '''
-    #     Compare the values in `self.cache` and in `other`.
-
-    #     By default `other` is gotten using `self.load()`.
-    #     '''
-
-    #     other = self.load() if other is None else other
-
-    #     return compare_dict_values(self.cache, other)
