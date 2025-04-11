@@ -161,19 +161,15 @@ class AbstractCacher(abc.ABC):
         '''
         self.cache = self.new_cache()
         
-    def clear(self, path: Path | None = None, where = "file"):
+    def clear(self, path: Path | None = None):
         '''
-        Clear cache.
+        Clear cache on file and in memory.
 
         Arguments:
             path:
                 Path of cache file.
-            where:
-                One of "file", "memory", or "both".
         '''
 
         path = self.save_path if path is None else path
-        if where in ["file", "both"]:
-            self.clear_file_cache(path)
-        if where in ["memory", "both"]:
-            self.clear_memory_cache()
+        self.clear_file_cache(path)
+        self.clear_memory_cache()

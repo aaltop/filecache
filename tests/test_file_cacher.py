@@ -91,7 +91,7 @@ def test_clear_cache(tmp_path, test_folder_text):
     file_cacher.save()
     assert file_cacher.cache == file_cacher.load_cache(relative = False)
 
-    file_cacher.clear(where = "both")
+    file_cacher.clear()
     assert len(file_cacher.cache) == 0
     with pytest.raises(StateNotFoundError):
         file_cacher.load_cache(relative = False)

@@ -214,7 +214,7 @@ def test_clear_cache(tmp_path):
     assert len(next(iter(function_cache.cache.values()))) == 5
     function_cache.save()
     assert len(next(iter(function_cache.load_cache().values()))) == 5
-    function_cache.clear(where = "both")
+    function_cache.clear()
     assert len(next(iter(function_cache.cache.values()))) == 0
     with pytest.raises(StateNotFoundError):
         function_cache.load_cache()
