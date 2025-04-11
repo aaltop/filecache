@@ -38,7 +38,7 @@ class DequeCache(defaultdict):
         '''
 
         self._max_size = maxlen(max_size)
-        super().__init__(lambda: deque(maxlen = self.max_size))
+        super().__init__(lambda: deque(maxlen = self._max_size))
         self.compare_deque_objects: ComparisonFunc = (
             lambda one, two: one == two
             if compare_deque_obj is None
@@ -46,10 +46,8 @@ class DequeCache(defaultdict):
         )
         self._move_newest_to_front = True
 
-
     @property
     def max_size(self) -> int | None:
-
         return self._max_size
     
     @max_size.setter
@@ -117,3 +115,8 @@ class DequeCache(defaultdict):
         
         raise LookupError("No matching deque value found")
 
+    def from_dict(self, _dict: dict):
+
+        for key, value in _dict.items():
+            self[key] = value
+        return self

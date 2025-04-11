@@ -75,4 +75,4 @@ def test_save_and_load(tmp_path, test_folder_text):
     file_cacher.hash_files([content_folder], depth = 1)
     assert len(file_cacher.cache) == 3
     file_cacher.save()
-    assert file_cacher.cache == file_cacher.load(relative = False)
+    assert file_cacher.cache == file_cacher.load_cache(relative = False)

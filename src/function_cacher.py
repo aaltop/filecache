@@ -5,9 +5,8 @@ file.
 '''
 
 from functools import wraps
-import inspect
 from typing import (
-    NamedTuple, Any, TypedDict, override
+    NamedTuple, Any, TypedDict, Self
 )
 from collections.abc import Callable
 from collections import deque
@@ -21,6 +20,7 @@ from src.utils.inspect import (
     bind_arguments, unique_name
 )
 from .deque_cache import DequeCache
+from src.abstract_cacher import CacherState
 
 
 
@@ -79,7 +79,6 @@ class FunctionCacher(ShelveCacher):
         
         self._function_name_to_hash: dict[str, str] = {}
 
-    @override
     @classmethod
     def new_cache(self):
         return DequeCache()
@@ -154,3 +153,18 @@ class FunctionCacher(ShelveCacher):
 
         function_hash = self._function_name_to_hash[unique_name(func)]
         return self.cache[function_hash]
+    
+    def get_cache_for_state(self):
+        return dict(self.cache)
+    
+    def cache_from_state_cache(self, state_cache: dict):
+        return self.cache.from_dict(state_cache)
+    
+    def get_state(self) -> CacherState[DequeCache]:
+        return super().get_state()
+
+    def load(self, path=None) -> CacherState[DequeCache]:
+        return super().load(path)
+    
+    def load_cache(self, path=None, inplace=False, *args, **kwargs) -> DequeCache | Self:
+        return super().load_cache(path, inplace, *args, **kwargs)

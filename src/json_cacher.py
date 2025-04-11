@@ -7,7 +7,7 @@ import abc
 from pathlib import Path
 import json
 
-from .abstract_cacher import AbstractCacher
+from .abstract_cacher import AbstractCacher, CacherState
 
 class JsonCacher(AbstractCacher):
 
@@ -25,21 +25,14 @@ class JsonCacher(AbstractCacher):
     def new_cache(self):
         return {}
 
-    @abc.abstractmethod
-    def json_cache(self):
-        '''
-        Return the cache such that it is suitable for json.load.
-        '''
-
-    def get_json_state(self):
-        '''
-        Get all data relevant to the cacher, suitable for passing
-        to json.load.
-        '''
-
-        state = self.get_state()
-        state["cache"] = self.json_cache()
-        return state
+    def get_cache_for_state(self) -> dict:
+        return super().get_cache_for_state()
+    
+    def cache_from_state_cache(self, state_cache) -> dict:
+        return super().cache_from_state_cache(state_cache)
+    
+    def get_state(self) -> CacherState[dict]:
+        return super().get_state()
     
     def save(self, path: Path = None, json_kwargs: dict = None):
         '''
@@ -51,11 +44,11 @@ class JsonCacher(AbstractCacher):
 
         path.parents[0].mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
-            json.dump(self.get_json_state(), f, **json_kwargs)
+            json.dump(self.get_state(), f, **json_kwargs)
 
         return self
     
-    def load(self, path: Path = None) -> dict:
+    def load(self, path: Path = None) -> CacherState[dict]:
         '''
         Load the state as saved by `save()`.
         '''
@@ -65,4 +58,4 @@ class JsonCacher(AbstractCacher):
         with open(path) as f:
             saved_cache = json.load(f)
 
-        return saved_cache["cache"]
+        return saved_cache

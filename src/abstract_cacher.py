@@ -7,15 +7,16 @@ from src.utils.string import pascal_to_snake_case
 from src.typing import Hasher
 
 type CacheObject = Any
+type StateCacheObject = Any
 
-class MetadataDict(TypedDict):
+class CacherMetadata(TypedDict):
 
     hash_algorithm: str
 
-class StateDict(TypedDict):
+class CacherState[T](TypedDict):
 
-    metadata: MetadataDict
-    cache: CacheObject
+    metadata: CacherMetadata
+    cache: T
     
 
 class AbstractCacher(abc.ABC):
@@ -53,7 +54,7 @@ class AbstractCacher(abc.ABC):
         )
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
 
-    def metadata(self) -> MetadataDict:
+    def metadata(self) -> CacherMetadata:
         '''
         Get metadata about this cacher.
         '''
@@ -62,14 +63,29 @@ class AbstractCacher(abc.ABC):
             "hash_algorithm": self.hasher().name
         }
     
-    def get_state(self) -> StateDict:
+    @abc.abstractmethod
+    def get_cache_for_state(self) -> StateCacheObject:
         '''
-        Get all data relevant to the cacher.
+        Get the cache such that it is suitable for saving.
+        '''
+        return self.cache
+
+    @abc.abstractmethod
+    def cache_from_state_cache(self, state_cache: StateCacheObject, *args, **kwargs) -> CacheObject:
+        '''
+        Get the proper cache from the state cache.
+        '''
+        return state_cache
+    
+    def get_state(self) -> CacherState[StateCacheObject]:
+        '''
+        Get all data (the state) relevant to the cacher. State
+        should be saveable as-is using `.save`. 
         '''
 
         return {
             "metadata": self.metadata(),
-            "cache": self.cache
+            "cache": self.get_cache_for_state()
         }
     
     @classmethod
@@ -80,7 +96,7 @@ class AbstractCacher(abc.ABC):
         '''
     
     @abc.abstractmethod
-    def save(self, path: Path = None) -> Self:
+    def save(self, path: Path | None = None) -> Self:
         '''
         Save the state.
 
@@ -88,9 +104,31 @@ class AbstractCacher(abc.ABC):
         '''
     
     @abc.abstractmethod
-    def load(self, path: Path = None) -> CacheObject:
+    def load(self, path: Path | None = None) -> CacherState[StateCacheObject]:
         '''
         Load the state as saved by `save()`.
 
         If `path` is None, defaults to self.save_path.
         '''
+
+    def load_cache(self, path: Path | None = None, inplace = False, *args, **kwargs):
+        '''
+        Load the cache.
+
+        Arguments:
+            path:
+                Passed to `.load`.
+            inplace:
+                Whether to return cache or set it in the Cacher.
+            args:
+                Passed to `.cache_from_state_cache`.
+            kwargs:
+                Passed to `.cache_from_state_cache`.
+        '''
+        state = self.load(path)
+        cache = self.cache_from_state_cache(state["cache"], *args, **kwargs)
+        if inplace:
+            self.cache = cache
+            return self
+        else:
+            return cache

@@ -12,6 +12,7 @@ from .utils.path import expand_directories, match_all
 from .json_cacher import JsonCacher
 from src.mixin.abstract_cache_comparison import AbstractCacheComparisonMixin
 from src.utils.dict import compare_dict_values
+from src.abstract_cacher import CacherState
 
 type Cache = dict[Path, str]
 class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
@@ -20,7 +21,7 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         super().__init__(*args, **kwargs)
         self.cache: Cache
 
-    def json_cache(self):
+    def get_cache_for_state(self):
         '''
         Return the cache with the paths as absolute strings.
         '''
@@ -65,18 +66,22 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
 
         return self
 
-    def load(self, path: Path = None, relative = True) -> dict:
+    def load(self, path: Path | None = None) -> CacherState[dict]:
         '''
-        Load the state as saved by `save()`. If `relative`,
-        compute the file paths relative to current working directory.
+        Load the state as saved by `save()`.
         '''
 
         path = self.save_path if path is None else path
-
-
         with open(path) as f:
-            saved_cache = json.load(f)
+            state = json.load(f)
 
+        return state
+    
+    def cache_from_state_cache(self, state_cache: CacherState[dict], relative = True):
+        '''
+        If `relative`,
+        compute the file paths relative to current working directory.
+        '''
         def convert_path(path_str):
 
             path_obj = Path(path_str)
@@ -87,8 +92,9 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         
         return {
             convert_path(file_path): digest
-            for file_path, digest in saved_cache["cache"].items()
+            for file_path, digest in state_cache.items()
         }
+        
 
     def compare_caches(self, other: Cache | None = None) -> dict[Path, bool]:
 

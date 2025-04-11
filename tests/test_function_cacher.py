@@ -62,7 +62,7 @@ def test_caching_simple(tmp_path: Path):
 
     # test save and load
     function_cache.save()
-    function_cache.cache = function_cache.load()
+    function_cache.load_cache(inplace = True)
 
     deq = list(function_cache.cache.values())[0]
     value = deq[0]
@@ -100,7 +100,7 @@ def test_caching_complex(tmp_path: Path):
 
     # test save and load
     function_cache.save()
-    function_cache.cache = function_cache.load()
+    function_cache.load_cache(inplace = True)
     deq = list(function_cache.cache.values())[0]
     value = deq[0]
     assert value["input"] == dict(capital = False)
