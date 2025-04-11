@@ -25,11 +25,11 @@ class JsonCacher(AbstractCacher):
     def new_cache(self):
         return {}
 
-    def get_cache_for_state(self) -> dict:
-        return super().get_cache_for_state()
+    def cache_to_state_cache(self) -> dict:
+        return super().cache_to_state_cache()
     
-    def cache_from_state_cache(self, state_cache) -> dict:
-        return super().cache_from_state_cache(state_cache)
+    def state_cache_to_cache(self, state_cache) -> dict:
+        return super().state_cache_to_cache(state_cache)
     
     def get_state(self) -> CacherState[dict]:
         return super().get_state()

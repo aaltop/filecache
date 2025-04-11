@@ -64,14 +64,14 @@ class AbstractCacher(abc.ABC):
         }
     
     @abc.abstractmethod
-    def get_cache_for_state(self) -> StateCacheObject:
+    def cache_to_state_cache(self) -> StateCacheObject:
         '''
         Get the cache such that it is suitable for saving.
         '''
         return self.cache
 
     @abc.abstractmethod
-    def cache_from_state_cache(self, state_cache: StateCacheObject, *args, **kwargs) -> CacheObject:
+    def state_cache_to_cache(self, state_cache: StateCacheObject, *args, **kwargs) -> CacheObject:
         '''
         Get the proper cache from the state cache.
         '''
@@ -85,7 +85,7 @@ class AbstractCacher(abc.ABC):
 
         return {
             "metadata": self.metadata(),
-            "cache": self.get_cache_for_state()
+            "cache": self.cache_to_state_cache()
         }
     
     @classmethod
@@ -126,7 +126,7 @@ class AbstractCacher(abc.ABC):
                 Passed to `.cache_from_state_cache`.
         '''
         state = self.load(path)
-        cache = self.cache_from_state_cache(state["cache"], *args, **kwargs)
+        cache = self.state_cache_to_cache(state["cache"], *args, **kwargs)
         if inplace:
             self.cache = cache
             return self

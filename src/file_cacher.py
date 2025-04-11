@@ -21,7 +21,7 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         super().__init__(*args, **kwargs)
         self.cache: Cache
 
-    def get_cache_for_state(self):
+    def cache_to_state_cache(self):
         '''
         Return the cache with the paths as absolute strings.
         '''
@@ -77,7 +77,7 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
 
         return state
     
-    def cache_from_state_cache(self, state_cache: CacherState[dict], relative = True):
+    def state_cache_to_cache(self, state_cache: CacherState[dict], relative = True):
         '''
         If `relative`,
         compute the file paths relative to current working directory.

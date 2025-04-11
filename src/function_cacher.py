@@ -154,10 +154,10 @@ class FunctionCacher(ShelveCacher):
         function_hash = self._function_name_to_hash[unique_name(func)]
         return self.cache[function_hash]
     
-    def get_cache_for_state(self) -> DequeCache:
+    def cache_to_state_cache(self) -> DequeCache:
         return self.cache
     
-    def cache_from_state_cache(self, state_cache: DequeCache) -> DequeCache:
+    def state_cache_to_cache(self, state_cache: DequeCache) -> DequeCache:
         return state_cache
     
     def get_state(self) -> CacherState[DequeCache]:
