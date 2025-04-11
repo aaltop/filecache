@@ -12,7 +12,7 @@ def maxlen(value: int | None) -> int | None:
 
 type ComparisonFunc = Callable[[Any, Any], bool]
 
-class DequeCache(defaultdict):
+class DequeCache(dict):
     '''
     Defaultdict that holds cached items in deques. Allows deques'
     max length to be changed dynamically. In the deques, most recently
@@ -38,7 +38,6 @@ class DequeCache(defaultdict):
         '''
 
         self._max_size = maxlen(max_size)
-        super().__init__(lambda: deque(maxlen = self._max_size))
         self.compare_deque_objects: ComparisonFunc = (
             lambda one, two: one == two
             if compare_deque_obj is None
@@ -50,6 +49,10 @@ class DequeCache(defaultdict):
     def max_size(self) -> int | None:
         return self._max_size
     
+    def _deque_factory(self):
+
+        return deque(maxlen = self._max_size)
+    
     @max_size.setter
     def max_size(self, value: int | None):
 
@@ -59,7 +62,7 @@ class DequeCache(defaultdict):
             self._max_size = int(value)
 
         for key in self:
-            new_deque = deque(maxlen = self._max_size)
+            new_deque = self._deque_factory()
             # Maintain order by reversing, extending from left
             new_deque.extendleft(reversed(self[key]))
             self[key] = new_deque
@@ -114,9 +117,8 @@ class DequeCache(defaultdict):
                 return deq_ob
         
         raise LookupError("No matching deque value found")
-
-    def from_dict(self, _dict: dict):
-
-        for key, value in _dict.items():
-            self[key] = value
-        return self
+    
+    def __getitem__(self, key):
+        if not key in self:
+            super().__setitem__(key, self._deque_factory())
+        return super().__getitem__(key)

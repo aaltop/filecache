@@ -28,11 +28,6 @@ def test_wrapped_function(tmp_path: Path):
 
     assert returned_value == string_value
 
-
-# TODO: might be nice to have
-# a way to lookup what the function points to directly in the cache,
-# though the end user would ultimately not care about the cacher at all,
-# really.
 def test_caching_simple(tmp_path: Path):
     '''
     Test caching with basic Python data type.
