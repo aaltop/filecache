@@ -6,6 +6,7 @@ import string
 from collections import deque
 
 from src.function_cacher import FunctionCacher
+from src.exceptions import StateNotFoundError
 
 # NOTE: tmp_path is a pytest thing
 def test_wrapped_function(tmp_path: Path):
@@ -195,3 +196,25 @@ def test_lookup_function_cache():
     assert len(cached_data) == 1
     assert "input" in cached_data[0]
     assert "output" in cached_data[0]
+
+def test_clear_cache(tmp_path):
+    
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
+
+    @function_cache()
+    def dummy_function(dummy_val):
+
+        return dummy_val + 1
+    
+    for i in range(5): dummy_function(i)
+    print(function_cache.cache)
+    assert len(next(iter(function_cache.cache.values()))) == 5
+    function_cache.save()
+    assert len(next(iter(function_cache.load_cache().values()))) == 5
+    function_cache.clear(where = "both")
+    assert len(next(iter(function_cache.cache.values()))) == 0
+    with pytest.raises(StateNotFoundError):
+        function_cache.load_cache()

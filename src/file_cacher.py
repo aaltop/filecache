@@ -65,17 +65,6 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
             self.hash_file(path)
 
         return self
-
-    def load(self, path: Path | None = None) -> CacherState[dict]:
-        '''
-        Load the state as saved by `save()`.
-        '''
-
-        path = self.save_path if path is None else path
-        with open(path) as f:
-            state = json.load(f)
-
-        return state
     
     def state_cache_to_cache(self, state_cache: CacherState[dict], relative = True):
         '''

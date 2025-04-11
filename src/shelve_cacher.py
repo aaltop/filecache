@@ -5,7 +5,8 @@ Class that saves its cache using the shelve module.
 from typing import Self
 
 from .abstract_cacher import AbstractCacher, CacherState
-from src.utils.shelve import load_dict, save_dict
+from src.utils.shelve import load_dict, save_dict, clear_shelve
+from src.exceptions import StateNotFoundError
 
 class ShelveCacher(AbstractCacher):
     '''
@@ -46,8 +47,13 @@ class ShelveCacher(AbstractCacher):
             else path
         )
 
+        state = load_dict(path)
+        if not "metadata" in state and not "cache" in state:
+            raise StateNotFoundError()
         return load_dict(path)
     
     def load_cache(self, path = None, inplace=False, *args, **kwargs) -> dict | Self:
         return super().load_cache(path, inplace, *args, **kwargs)
 
+    def clear_file_cache(self, path = None):
+        clear_shelve(path)

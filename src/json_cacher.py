@@ -8,6 +8,7 @@ from pathlib import Path
 import json
 
 from .abstract_cacher import AbstractCacher, CacherState
+from src.exceptions import StateNotFoundError
 
 class JsonCacher(AbstractCacher):
 
@@ -15,11 +16,8 @@ class JsonCacher(AbstractCacher):
         super().__init__(save_path, *args, **kwargs)
         self.cache: dict
 
-        self.save_path = (
-            Path() / self.name_as_snake / "cache.json"
-            if save_path is None
-            else save_path
-        )
+    def create_save_path(self, path = None):
+        return super().create_save_path(path, file_suffix = "json")
 
     @classmethod
     def new_cache(self):
@@ -49,13 +47,15 @@ class JsonCacher(AbstractCacher):
         return self
     
     def load(self, path: Path = None) -> CacherState[dict]:
-        '''
-        Load the state as saved by `save()`.
-        '''
 
         path = self.save_path if path is None else path
+        try:
+            with open(path) as f:
+                state = json.load(f)
+        except FileNotFoundError:
+            raise StateNotFoundError()
 
-        with open(path) as f:
-            saved_cache = json.load(f)
-
-        return saved_cache
+        return state
+    
+    def clear_file_cache(self, path = None):
+        return super().clear_file_cache(path)

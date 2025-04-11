@@ -47,12 +47,18 @@ class AbstractCacher(abc.ABC):
 
         self.hasher = hasher
         self.cache = self.new_cache()
-        self.save_path = (
-            Path() / self.name_as_snake / "cache"
-            if save_path is None 
-            else save_path
-        )
+        self.save_path = self.create_save_path(save_path)
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
+
+    def create_save_path(self, path: Path | None = None, file_suffix = ""):
+
+        filename = "cache" if len(file_suffix) == 0 else f"cache.{file_suffix}"
+        save_path = (
+            Path() / self.name_as_snake / filename
+            if path is None 
+            else path / self.name_as_snake / filename
+        )
+        return save_path
 
     def metadata(self) -> CacherMetadata:
         '''
@@ -109,6 +115,9 @@ class AbstractCacher(abc.ABC):
         Load the state as saved by `save()`.
 
         If `path` is None, defaults to self.save_path.
+
+        Raises:
+            StateNotFoundError:
         '''
 
     def load_cache(self, path: Path | None = None, inplace = False, *args, **kwargs):
@@ -124,7 +133,12 @@ class AbstractCacher(abc.ABC):
                 Passed to `.cache_from_state_cache`.
             kwargs:
                 Passed to `.cache_from_state_cache`.
+            
+            Raises:
+                StateNotFoundError:
+                    The state to load the cache from was not found.
         '''
+        path = self.save_path if path is None else path
         state = self.load(path)
         cache = self.state_cache_to_cache(state["cache"], *args, **kwargs)
         if inplace:
@@ -132,3 +146,34 @@ class AbstractCacher(abc.ABC):
             return self
         else:
             return cache
+    
+    @abc.abstractmethod
+    def clear_file_cache(self, path: Path | None = None):
+        '''
+        Clear the file cache.
+        '''
+        path = self.save_path if path is None else path
+        path.unlink(missing_ok = True)
+
+    def clear_memory_cache(self):
+        '''
+        Clear `self.cache`.
+        '''
+        self.cache = self.new_cache()
+        
+    def clear(self, path: Path | None = None, where = "file"):
+        '''
+        Clear cache.
+
+        Arguments:
+            path:
+                Path of cache file.
+            where:
+                One of "file", "memory", or "both".
+        '''
+
+        path = self.save_path if path is None else path
+        if where in ["file", "both"]:
+            self.clear_file_cache(path)
+        if where in ["memory", "both"]:
+            self.clear_memory_cache()

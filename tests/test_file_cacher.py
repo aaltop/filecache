@@ -2,6 +2,7 @@ import pytest
 
 from src.file_cacher import FileCacher
 from src.utils.path import write_dict_files
+from src.exceptions import StateNotFoundError
 
 @pytest.fixture
 def test_folder_text():
@@ -76,3 +77,21 @@ def test_save_and_load(tmp_path, test_folder_text):
     assert len(file_cacher.cache) == 3
     file_cacher.save()
     assert file_cacher.cache == file_cacher.load_cache(relative = False)
+
+def test_clear_cache(tmp_path, test_folder_text):
+    '''Clearing cache works'''
+
+    content_folder = tmp_path / "content"
+    write_dict_files(content_folder, test_folder_text)
+    cache_path = tmp_path / "cache"
+    file_cacher = FileCacher(save_path = cache_path)
+
+    file_cacher.hash_files([content_folder], depth = 1)
+    assert len(file_cacher.cache) == 3
+    file_cacher.save()
+    assert file_cacher.cache == file_cacher.load_cache(relative = False)
+
+    file_cacher.clear(where = "both")
+    assert len(file_cacher.cache) == 0
+    with pytest.raises(StateNotFoundError):
+        file_cacher.load_cache(relative = False)

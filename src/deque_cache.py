@@ -36,7 +36,7 @@ class DequeCache(dict):
                 to the user, whatever is needed in the comparison
                 function.
         '''
-
+        
         self._max_size = maxlen(max_size)
         self.compare_deque_objects: ComparisonFunc = (
             lambda one, two: one == two

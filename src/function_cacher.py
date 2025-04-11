@@ -168,3 +168,7 @@ class FunctionCacher(ShelveCacher):
     
     def load_cache(self, path=None, inplace=False, *args, **kwargs) -> DequeCache | Self:
         return super().load_cache(path, inplace, *args, **kwargs)
+    
+    def clear_memory_cache(self):
+        for key in self.cache:
+            self.cache[key].clear()
