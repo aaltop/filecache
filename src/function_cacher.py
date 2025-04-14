@@ -48,6 +48,8 @@ def _compare_inputs(expected_input, deque_object: InputOutputDict):
 
     return expected_input == deque_object["input"]
 
+type Cache = DequeCache[InputOutputDict]
+
 # TODO:
 # Another issue maybe how to work with methods. Just add an option
 # to the wrapper for wrapping a method instead?  
@@ -72,7 +74,7 @@ class FunctionCacher(ShelveCacher):
         '''
 
         super().__init__(*args, **kwargs)
-        self.cache: DequeCache # needs a little help with the typing
+        self.cache: Cache # needs a little help with the typing
         self.cache.compare_deque_objects = _compare_inputs
         self._cache_size: int | None = None
         self.cache_size = cache_size
@@ -81,7 +83,7 @@ class FunctionCacher(ShelveCacher):
 
     @classmethod
     def new_cache(self):
-        return DequeCache()
+        return DequeCache[InputOutputDict]()
     
     @property
     def cache_size(self):
@@ -154,19 +156,19 @@ class FunctionCacher(ShelveCacher):
         function_hash = self._function_name_to_hash[unique_name(func)]
         return self.cache[function_hash]
     
-    def cache_to_state_cache(self) -> DequeCache:
+    def cache_to_state_cache(self) -> Cache:
         return self.cache
     
-    def state_cache_to_cache(self, state_cache: DequeCache) -> DequeCache:
+    def state_cache_to_cache(self, state_cache: Cache) -> Cache:
         return state_cache
     
-    def get_state(self) -> CacherState[DequeCache]:
+    def get_state(self) -> CacherState[Cache]:
         return super().get_state()
 
-    def load(self, path=None) -> CacherState[DequeCache]:
+    def load(self, path=None) -> CacherState[Cache]:
         return super().load(path)
     
-    def load_cache(self, path=None, inplace=False, *args, **kwargs) -> DequeCache | Self:
+    def load_cache(self, path=None, inplace=False, *args, **kwargs) -> Cache | Self:
         return super().load_cache(path, inplace, *args, **kwargs)
     
     def clear_memory_cache(self):

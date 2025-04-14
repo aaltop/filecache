@@ -12,9 +12,9 @@ def maxlen(value: int | None) -> int | None:
 
 type ComparisonFunc = Callable[[Any, Any], bool]
 
-class DequeCache(dict):
+class DequeCache[T](dict):
     '''
-    Defaultdict that holds cached items in deques. Allows deques'
+    Dictionary that holds cached items in deques. Allows deques'
     max length to be changed dynamically. In the deques, most recently
     used item should be on the left.
     '''
@@ -49,7 +49,7 @@ class DequeCache(dict):
     def max_size(self) -> int | None:
         return self._max_size
     
-    def _deque_factory(self):
+    def _deque_factory(self) -> deque[T]:
 
         return deque(maxlen = self._max_size)
     
@@ -80,7 +80,7 @@ class DequeCache(dict):
         finally:
             self._move_newest_to_front = True
 
-    def find_cached_item(self, key, comp_value: Any, comp_function: ComparisonFunc | None = None):
+    def find_cached_item(self, key, comp_value: Any, comp_function: ComparisonFunc | None = None) -> T:
         '''
         Find the cached item in the deque pointed to by `key`.
         Arguments:
@@ -118,7 +118,7 @@ class DequeCache(dict):
         
         raise LookupError("No matching deque value found")
     
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> deque[T]:
         if not key in self:
             super().__setitem__(key, self._deque_factory())
         return super().__getitem__(key)
