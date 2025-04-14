@@ -129,6 +129,15 @@ class FunctionCacher(ShelveCacher):
         return CacheLookup(function_hash, bound_args, None)
     
     def __call__(self, compare_funcs: CompareFuncs = None):
+        '''
+        Arguments:
+            compare_funcs:
+                Functions that are used to compare current input dict's
+                values with cached input dicts' values. Each function
+                should take a matching pair of function arguments and
+                compare them, returning None if not comparable by the
+                function, or False or True if the compare equal.
+        '''
 
         def inner_wrapper(func):
 
@@ -175,8 +184,38 @@ class FunctionCacher(ShelveCacher):
     def load(self, path=None) -> CacherState[Cache]:
         return super().load(path)
     
-    def load_cache(self, path=None, inplace=False, *args, **kwargs) -> Cache | Self:
-        return super().load_cache(path, inplace, *args, **kwargs)
+    def load_cache(self, path = None, *args, inplace = False, overwrite_loaded_cache_size = False, **kwargs) -> Cache | Self:
+        '''
+        See AbstractCacher.
+
+        Arguments:
+            overwrite_loaded_cache_size:
+                Whether to overwrite the cache size of the loaded in
+                cache with the current cache size, or vice versa.
+                
+                
+                By default, the loaded cache's cache size replaces
+                the current cache size if the operation is performed
+                in place. if not `inplace`, the loaded cache's
+                size is replaced if `overwrite_loaded_cache_size` is
+                True, but if False, the cacher's (`self`'s)
+                cache size is not replaced (i.e. this argument has
+                no effect).
+
+        '''
+        
+
+        cache = super().load_cache(path, inplace, *args, **kwargs)
+        match (inplace, overwrite_loaded_cache_size):
+            case (True, True):
+                # should set the cache as well
+                self.cache_size = self.cache_size
+            case (True, False):
+                self.cache_size = self.cache.max_size
+            case (False, True):
+                cache.max_size = self.cache_size
+
+        return super().load_cache(path, inplace = False, *args, **kwargs)
     
     def clear_memory_cache(self):
         for key in self.cache:

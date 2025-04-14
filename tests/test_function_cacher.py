@@ -204,9 +204,37 @@ def test_cache_size_dynamic(tmp_path: Path):
     function_cache.cache_size = 3
     assert len(next(iter(function_cache.cache.values()))) == 3
 
+def test_cache_size_after_load(tmp_path: Path):
+    '''
+    Cache size after loading is not automatically set to current
+    cache size.
+    '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path, cache_size = 5)
+
+    @function_cache()
+    def dummy_function(dummy_val):
+        return dummy_val + 1
+    
+    for i in range(5): dummy_function(i)
+    function_cache.save()
+    function_cache.cache_size = 3
+    function_cache.load_cache(inplace=True)
+    # inplace overwrites the cacher's cache size to keep consistency
+    assert function_cache.cache_size == 5
+    assert function_cache.cache.max_size == 5
+    assert len(next(iter(function_cache.cache.values()))) == 5
+    function_cache.cache_size = 3
+    function_cache.load_cache(inplace = True, overwrite_loaded_cache_size = True)
+    assert len(next(iter(function_cache.cache.values()))) == 3
+    assert function_cache.cache.max_size == 3
+
 
 def test_lookup_function_cache():
-    '''
+    ''' 
     Function's cached data can be looked up.
     '''
 

@@ -134,9 +134,9 @@ class AbstractCacher(abc.ABC):
             kwargs:
                 Passed to `.cache_from_state_cache`.
             
-            Raises:
-                StateNotFoundError:
-                    The state to load the cache from was not found.
+        Raises:
+            StateNotFoundError:
+                The state to load the cache from was not found.
         '''
         path = self.save_path if path is None else path
         state = self.load(path)

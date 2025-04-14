@@ -1,5 +1,3 @@
-# exclude all files everywhere
-*.*
 # exclude all paths on top level
 /*
 
@@ -9,6 +7,7 @@ __pycache__
 # ----------------------------------
 !src
 !tests
+!examples
 
 # ==================================
 
@@ -16,8 +15,6 @@ __pycache__
 
 # files to include
 # ----------------
-
-!*.py
 !.gitignore
 
 # pdm stuff
@@ -27,6 +24,3 @@ __pycache__
 
 
 # ================
-
-# for having random stuff 
-*ignoregit*
