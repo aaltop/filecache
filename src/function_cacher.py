@@ -10,6 +10,7 @@ from typing import (
 )
 from collections.abc import Callable
 from collections import deque
+import copy
 
 import logging
 logger = logging.getLogger(__name__)
@@ -152,12 +153,12 @@ class FunctionCacher(ShelveCacher):
 
                 function_hash, _, output = self.lookup_function(func, args, kwargs, compare_funcs)
                 if not (output is None):
-                    return output
+                    return copy.deepcopy(output)
                 
                 output = func(*args, **kwargs)
                 # the new invocation should be the first item
                 # (most recently used)
-                self.cache[function_hash][0] |= {"output": output}
+                self.cache[function_hash][0] |= {"output": copy.deepcopy(output)}
                 return output
             
             return wrapper_func

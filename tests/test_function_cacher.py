@@ -274,3 +274,21 @@ def test_clear_cache(tmp_path):
     assert len(next(iter(function_cache.cache.values()))) == 0
     with pytest.raises(StateNotFoundError):
         function_cache.load_cache()
+
+def test_returns_copy():
+    '''
+    Output from cached function can be modified without the contents
+    of the cache changing.
+    '''
+    
+    function_cache = FunctionCacher()
+
+    @function_cache()
+    def dummy_function():
+        return { "value": 0 }
+    
+    dicti = dummy_function()
+    dicti["value"] = 1
+    assert dummy_function()["value"] == 0
+    dummy_function()["value"] += 1
+    assert dummy_function()["value"] == 0
