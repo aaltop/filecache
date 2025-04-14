@@ -7,6 +7,7 @@ from collections import deque
 
 from src.function_cacher import FunctionCacher
 from src.exceptions import StateNotFoundError
+from src.utils.compare import all_instance_of
 
 # NOTE: tmp_path is a pytest thing
 def test_wrapped_function(tmp_path: Path):
@@ -78,29 +79,56 @@ def test_caching_complex(tmp_path: Path):
 
     function_cache = FunctionCacher(save_path = cache_path)
 
-    @function_cache()
-    def dummy_function(capital = False):
-    
-        letters = string.ascii_uppercase if capital else string.ascii_lowercase
-        return pd.DataFrame(dict(
-            idx = range(len(letters)),
-            letters = letters
-        ))
+    letters = string.ascii_lowercase
+    df = pd.DataFrame(dict(
+        idx = range(len(letters)),
+        letters = iter(letters)
+    ))
+
+    def compare_df(one, two):
+        if all_instance_of(pd.DataFrame, one, two):
+
+            if not (len(one.index) == len(two.index)):
+                return False
+            
+            if not (len(one.columns) == len(two.columns)):
+                return False
+
+            # numpy bool...
+            return bool((one == two).all().all())
+
+    called = 0
+
+    @function_cache(compare_funcs = [compare_df])
+    def dummy_function(df):
+        nonlocal called
+        called += 1
+        return df
     
     # test first that it looks okay normally
-    return_value = dummy_function()
+    return_value = dummy_function(df)
+    assert called == 1
     deq = list(function_cache.cache.values())[0]
     value = deq[0]
-    assert value["input"] == dict(capital = False)
-    assert (value["output"] == return_value).all().all()
+    assert value["input"] == dict(df = df)
+    assert compare_df(value["output"], return_value)
 
     # test save and load
     function_cache.save()
     function_cache.load_cache(inplace = True)
     deq = list(function_cache.cache.values())[0]
     value = deq[0]
-    assert value["input"] == dict(capital = False)
-    assert (value["output"] == return_value).all().all()
+    assert compare_df(value["input"]["df"], df)
+    assert compare_df(value["output"], return_value)
+    dummy_function(df)
+    assert called == 1
+    
+    df2 = df.copy()
+    df2["capital"] = df["letters"].str.capitalize()
+    dummy_function(df = df2)
+    assert called == 2
+    dummy_function(df = df2)
+    assert called == 2
     
 
 def test_is_cached(tmp_path: Path):

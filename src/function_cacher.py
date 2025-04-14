@@ -19,8 +19,9 @@ from src.utils.inspect import (
     function_hash as hash_function,
     bind_arguments, unique_name
 )
-from .deque_cache import DequeCache
+from src.deque_cache import DequeCache
 from src.abstract_cacher import CacherState
+from src.utils.compare import compare_dict_values, CompareFuncs
 
 
 
@@ -43,10 +44,6 @@ class InputOutputDict(TypedDict):
 
     input: Any
     output: Any
-
-def _compare_inputs(expected_input, deque_object: InputOutputDict):
-
-    return expected_input == deque_object["input"]
 
 type Cache = DequeCache[InputOutputDict]
 
@@ -75,7 +72,7 @@ class FunctionCacher(ShelveCacher):
 
         super().__init__(*args, **kwargs)
         self.cache: Cache # needs a little help with the typing
-        self.cache.compare_deque_objects = _compare_inputs
+        self.compare_funcs: CompareFuncs = None
         self._cache_size: int | None = None
         self.cache_size = cache_size
         
@@ -98,7 +95,12 @@ class FunctionCacher(ShelveCacher):
     def hash_function(self, func):
         return hash_function(func, hasher = self.hasher())
 
-    def lookup_function(self, func: Callable, args, kwargs) -> CacheLookup:
+    def lookup_function(self,
+            func: Callable,
+            args,
+            kwargs,
+            compare_funcs: CompareFuncs = None
+        ) -> CacheLookup:
         '''
         Look for an invocation of `func()` invoked with
         `args` and `kwargs`, initialising the entry if not found.
@@ -111,7 +113,12 @@ class FunctionCacher(ShelveCacher):
         # look for previous output that matches the function and call signature
         if function_hash in self.cache:
             try:
-                input_output: InputOutputDict = self.cache.find_cached_item(function_hash, bound_args)
+                compare_funcs = compare_funcs or self.compare_funcs
+                input_output: InputOutputDict = self.cache.find_cached_item(
+                    function_hash,
+                    bound_args,
+                    lambda one, two: not any(compare_dict_values(one, two["input"], compare_funcs).values())
+                )
                 previous_output = input_output["output"]
                 return CacheLookup(function_hash, bound_args, previous_output)
             except LookupError:
@@ -121,7 +128,7 @@ class FunctionCacher(ShelveCacher):
         self.cache[function_hash].appendleft({"input": bound_args, "output": None})
         return CacheLookup(function_hash, bound_args, None)
     
-    def __call__(self):
+    def __call__(self, compare_funcs: CompareFuncs = None):
 
         def inner_wrapper(func):
 
@@ -134,7 +141,7 @@ class FunctionCacher(ShelveCacher):
             def wrapper_func(*args, **kwargs):
 
 
-                function_hash, _, output = self.lookup_function(func, args, kwargs)
+                function_hash, _, output = self.lookup_function(func, args, kwargs, compare_funcs)
                 if not (output is None):
                     return output
                 

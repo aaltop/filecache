@@ -6,7 +6,9 @@ def all_instance_of(type, *instances):
     '''
     return all(map(lambda inst: isinstance(inst, type), instances))
 
-def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: list[Callable[[Any, Any], bool | None]] | None = None):
+type CompareFuncs = list[Callable[[Any,Any], bool | None]] | None
+
+def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: CompareFuncs = None):
     '''
     Compare the values in dict1 and dict2.
     Returns a dictionary with each key in dict1
@@ -19,9 +21,13 @@ def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: list[Callabl
         dict2:
         comparison_funcs:
             A list of callables that accept values from `dict1` and `dict2`.
-            If the passed values cannot be compared with a a callable,
+            If the passed values cannot be compared with a callable,
             it should return None. If the values are equal under the
             comparison, return True, else False.
+
+            If no callable is able to compare the values, the simple
+            equality comparison is defaulted to (including when
+            `comparison_func` is empty or None).
     '''
 
     def dict_equality(dict1, dict2):
@@ -42,6 +48,8 @@ def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: list[Callabl
             result = comparison_func(value, value_in_other)
             if not (result is None):
                 if not isinstance(result, bool):
+                    print(value, value_in_other)
+                    print(result, type(result), isinstance(result, bool))
                     raise TypeError("Result of comparison should be None, True, or False")
                 # invert for differ
                 comp[key] = not result

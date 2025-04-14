@@ -9,8 +9,11 @@ def maxlen(value: int | None) -> int | None:
         return None
     else:
         return int(value)
+    
+def _compare_deque_objects(one, two):
+    return one == two
 
-type ComparisonFunc = Callable[[Any, Any], bool]
+type ComparisonFunc[one, two] = Callable[[one, two], bool]
 
 class DequeCache[T](dict):
     '''
@@ -38,8 +41,8 @@ class DequeCache[T](dict):
         '''
         
         self._max_size = maxlen(max_size)
-        self.compare_deque_objects: ComparisonFunc = (
-            lambda one, two: one == two
+        self.compare_deque_objects: ComparisonFunc[Any, T] = (
+            _compare_deque_objects
             if compare_deque_obj is None
             else compare_deque_obj
         )
@@ -80,7 +83,7 @@ class DequeCache[T](dict):
         finally:
             self._move_newest_to_front = True
 
-    def find_cached_item(self, key, comp_value: Any, comp_function: ComparisonFunc | None = None) -> T:
+    def find_cached_item[one, two](self, key, comp_value: one, comp_function: ComparisonFunc[one, two] | None = None) -> T:
         '''
         Find the cached item in the deque pointed to by `key`.
         Arguments:
