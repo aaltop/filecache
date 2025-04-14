@@ -22,14 +22,33 @@ def function_hash(function: Callable, *, hasher: Hasher | None = None)  -> str:
     function_hash = hasher.hexdigest()
     return function_hash
 
-def bind_arguments(func: Callable, args, kwargs):
+def bind_arguments(
+    func: Callable,
+    args,
+    kwargs,
+    ignore_in_kwargs: tuple[str,...] = ()
+):
     '''
     Bind the arguments `args` and `kwargs` based on the call signature
     of `function`.
+
+    Arguments:
+        func:
+        args:
+        kwargs:
+        ignore_in_kwargs:
+            If not empty, should contain keys of items expected to be in `kwargs`.
+            The keys will be deleted from `kwargs` and a partial bind
+            will be performed where the ignored keys will not be present.
     '''
 
     sig = base_inspect.signature(func)
-    bound_args = sig.bind(*args, **kwargs)
+    if len(ignore_in_kwargs) > 0:
+        for ign in ignore_in_kwargs:
+            del kwargs[ign]
+        bound_args = sig.bind_partial(*args, **kwargs)
+    else:
+        bound_args = sig.bind(*args, **kwargs)
     bound_args.apply_defaults()
     return bound_args.arguments
 
