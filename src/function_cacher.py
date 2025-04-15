@@ -11,6 +11,7 @@ from typing import (
 from collections.abc import Callable
 from collections import deque
 import copy
+import datetime as dt
 
 import logging
 logger = logging.getLogger(__name__)
@@ -63,14 +64,23 @@ class FunctionCacher(ShelveCacher):
             The currently set size of the deques in the cache.
     '''
 
-    def __init__(self, cache_size: int | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        cache_size: int | None = None,
+        valid_for = dt.timedelta.max,
+        *args,
+        **kwargs
+    ):
         '''
         
         Arguments:
             cache_size:
                 How large the LRU caches should be.
+            valid_for:
+                How long cached values are valid.
         '''
 
+        self.valid_for = valid_for
         super().__init__(*args, **kwargs)
         self.cache: Cache # needs a little help with the typing
         self.compare_funcs: CompareFuncs = None
@@ -79,9 +89,8 @@ class FunctionCacher(ShelveCacher):
         
         self._function_name_to_hash: dict[str, str] = {}
 
-    @classmethod
     def new_cache(self):
-        return DequeCache[InputOutputDict]()
+        return DequeCache[InputOutputDict](valid_for = self.valid_for)
     
     @property
     def cache_size(self):
@@ -126,6 +135,7 @@ class FunctionCacher(ShelveCacher):
                 logger.debug("No previous value found")
                 pass
 
+        # shouldn't update the access time as output isn't actually set
         self.cache[function_hash].appendleft({"input": bound_args, "output": None})
         return CacheLookup(function_hash, bound_args, None)
     
@@ -158,7 +168,7 @@ class FunctionCacher(ShelveCacher):
                 output = func(*args, **kwargs)
                 # the new invocation should be the first item
                 # (most recently used)
-                self.cache[function_hash][0] |= {"output": copy.deepcopy(output)}
+                self.cache.get_and_update(function_hash)[0] |= {"output": copy.deepcopy(output)}
                 return output
             
             return wrapper_func
@@ -185,38 +195,48 @@ class FunctionCacher(ShelveCacher):
     def load(self, path=None) -> CacherState[Cache]:
         return super().load(path)
     
-    def load_cache(self, path = None, *args, inplace = False, overwrite_loaded_cache_size = False, **kwargs) -> Cache | Self:
+    def load_cache(
+        self,
+        path = None,
+        *args,
+        inplace = False,
+        overwrite_loaded_cache_attributes = False,
+        **kwargs
+    ) -> Cache | Self:
         '''
         See AbstractCacher.
 
         Arguments:
-            overwrite_loaded_cache_size:
-                Whether to overwrite the cache size of the loaded in
-                cache with the current cache size, or vice versa.
+            overwrite_loaded_cache_attributes:
+                Whether to overwrite the attributes of the loaded
+                cache with the current attributes or vice versa.
                 
                 
-                By default, the loaded cache's cache size replaces
-                the current cache size if the operation is performed
+                By default, the loaded cache's attributes replace
+                if the operation is performed
                 in place. if not `inplace`, the loaded cache's
-                size is replaced if `overwrite_loaded_cache_size` is
+                attributes are replaced if `overwrite_loaded_cache_attributes` is
                 True, but if False, the cacher's (`self`'s)
-                cache size is not replaced (i.e. this argument has
+                attributes do not change (i.e. this argument has
                 no effect).
 
         '''
         
 
         cache = super().load_cache(path, inplace, *args, **kwargs)
-        match (inplace, overwrite_loaded_cache_size):
+        match (inplace, overwrite_loaded_cache_attributes):
             case (True, True):
                 # should set the cache as well
                 self.cache_size = self.cache_size
+                self.cache.valid_for = self.valid_for
             case (True, False):
                 self.cache_size = self.cache.max_size
+                self.valid_for = self.cache.valid_for
             case (False, True):
                 cache.max_size = self.cache_size
+                cache.valid_for = self.valid_for
 
-        return super().load_cache(path, inplace = False, *args, **kwargs)
+        return cache
     
     def clear_memory_cache(self):
         for key in self.cache:

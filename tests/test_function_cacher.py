@@ -228,7 +228,7 @@ def test_cache_size_after_load(tmp_path: Path):
     assert function_cache.cache.max_size == 5
     assert len(next(iter(function_cache.cache.values()))) == 5
     function_cache.cache_size = 3
-    function_cache.load_cache(inplace = True, overwrite_loaded_cache_size = True)
+    function_cache.load_cache(inplace = True, overwrite_loaded_cache_attributes = True)
     assert len(next(iter(function_cache.cache.values()))) == 3
     assert function_cache.cache.max_size == 3
 
@@ -292,3 +292,16 @@ def test_returns_copy():
     assert dummy_function()["value"] == 0
     dummy_function()["value"] += 1
     assert dummy_function()["value"] == 0
+
+def test_invocation_sets_cache_timestamp():
+    '''Invoking a wrapped function sets the timestamp in the cache'''
+
+    function_cache = FunctionCacher()
+
+    @function_cache()
+    def dummy_function():
+        return { "value": 0 }
+    
+    assert len(function_cache.cache._last_accessed) == 0
+    dummy_function()
+    assert len(function_cache.cache._last_accessed) == 1

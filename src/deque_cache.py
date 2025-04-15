@@ -1,7 +1,10 @@
-from collections import deque, defaultdict
-from typing import Any, Self, Generator
+from collections import deque
+from typing import Any, Self, Generator, override
 from collections.abc import Callable
 from contextlib import contextmanager
+import datetime as dt
+
+from src.invalidation_dict import InvalidationDict
 
 def maxlen(value: int | None) -> int | None:
 
@@ -15,7 +18,7 @@ def _compare_deque_objects(one, two):
 
 type ComparisonFunc[one, two] = Callable[[one, two], bool]
 
-class DequeCache[T](dict):
+class DequeCache[T](InvalidationDict[str, deque[T]]):
     '''
     Dictionary that holds cached items in deques. Allows deques'
     max length to be changed dynamically. In the deques, most recently
@@ -27,6 +30,8 @@ class DequeCache[T](dict):
         self,
         max_size: int | None = None,
         compare_deque_obj: ComparisonFunc | None = None,
+        *args,
+        **kwargs
     ):
         '''
         Arguments:
@@ -39,6 +44,8 @@ class DequeCache[T](dict):
                 to the user, whatever is needed in the comparison
                 function.
         '''
+
+        super().__init__(*args, **kwargs)
         
         self._max_size = maxlen(max_size)
         self.compare_deque_objects: ComparisonFunc[Any, T] = (
@@ -53,7 +60,6 @@ class DequeCache[T](dict):
         return self._max_size
     
     def _deque_factory(self) -> deque[T]:
-
         return deque(maxlen = self._max_size)
     
     @max_size.setter
@@ -116,7 +122,7 @@ class DequeCache[T](dict):
                 # move the accessed object to the front
                 if self._move_newest_to_front:
                     del self[key][i]
-                    self[key].appendleft(deq_ob)
+                    self.get_and_update(key).appendleft(deq_ob)
                 return deq_ob
         
         raise LookupError("No matching deque value found")
@@ -125,3 +131,8 @@ class DequeCache[T](dict):
         if not key in self:
             super().__setitem__(key, self._deque_factory())
         return super().__getitem__(key)
+    
+    @override
+    def invalidate(self, key):
+        self[key].clear()
+        return self

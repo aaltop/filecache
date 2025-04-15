@@ -19,7 +19,6 @@ class JsonCacher(AbstractCacher):
     def create_save_path(self, path = None):
         return super().create_save_path(path, file_suffix = "json")
 
-    @classmethod
     def new_cache(self):
         return {}
 
