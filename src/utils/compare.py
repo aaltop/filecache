@@ -48,8 +48,6 @@ def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: CompareFuncs
             result = comparison_func(value, value_in_other)
             if not (result is None):
                 if not isinstance(result, bool):
-                    print(value, value_in_other)
-                    print(result, type(result), isinstance(result, bool))
                     raise TypeError("Result of comparison should be None, True, or False")
                 # invert for differ
                 comp[key] = not result

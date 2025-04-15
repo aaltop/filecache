@@ -50,7 +50,7 @@ class ShelveCacher(AbstractCacher):
         state = load_dict(path)
         if not "metadata" in state and not "cache" in state:
             raise StateNotFoundError()
-        return load_dict(path)
+        return state
     
     def load_cache(self, path = None, inplace=False, *args, **kwargs) -> dict | Self:
         return super().load_cache(path, inplace, *args, **kwargs)

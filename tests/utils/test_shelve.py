@@ -30,5 +30,4 @@ def test_clear(tmp_path):
     database_path = tmp_path / "database"
     save_dict(database_path, example_dict)
     assert load_dict(database_path) == example_dict
-    clear_shelve(database_path)
-    print(load_dict(database_path))
+    assert all(clear_shelve(database_path)["deleted_files"].values())

@@ -156,11 +156,9 @@ def test_is_cached(tmp_path: Path):
     # second call uses cached value, no mutation
     assert 1 == mutate()
     assert mutated == 1
-    print(function_cache.cache)
     # passing in new argument changes value
     assert 2 == mutate(dummy_val = 1)
     assert mutated == 2
-    print(function_cache.cache)
     # again, cached value when calling with original argument
     assert 1 == mutate()
     assert mutated == 2
@@ -266,14 +264,13 @@ def test_clear_cache(tmp_path):
         return dummy_val + 1
     
     for i in range(5): dummy_function(i)
-    print(function_cache.cache)
     assert len(next(iter(function_cache.cache.values()))) == 5
     function_cache.save()
     assert len(next(iter(function_cache.load_cache().values()))) == 5
     function_cache.clear()
     assert len(next(iter(function_cache.cache.values()))) == 0
     with pytest.raises(StateNotFoundError):
-        function_cache.load_cache()
+        cac = function_cache.load_cache()
 
 def test_returns_copy():
     '''
