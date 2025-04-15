@@ -54,8 +54,8 @@ def test_normal_access():
 
     dummy_key = "dummy_key"
     dc[dummy_key] = "dummy data"
+    dc._last_accessed[dummy_key] = "replaced"
     old_last_accessed = dc._last_accessed.copy()
 
-    time.sleep(0.2)
     dc[dummy_key]
     assert old_last_accessed == dc._last_accessed

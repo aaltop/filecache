@@ -80,27 +80,33 @@ class FunctionCacher(ShelveCacher):
                 How long cached values are valid.
         '''
 
-        self.valid_for = valid_for
         super().__init__(*args, **kwargs)
         self.cache: Cache # needs a little help with the typing
-        self.compare_funcs: CompareFuncs = None
-        self._cache_size: int | None = None
+        self.valid_for = valid_for
         self.cache_size = cache_size
+        self.compare_funcs: CompareFuncs = None
         
         self._function_name_to_hash: dict[str, str] = {}
 
-    def new_cache(self):
-        return DequeCache[InputOutputDict](valid_for = self.valid_for)
+    @classmethod
+    def new_cache(cls):
+        return DequeCache[InputOutputDict]()
     
     @property
     def cache_size(self):
-        return self._cache_size
+        return self.cache.max_size
     
     @cache_size.setter
     def cache_size(self, value):
-
         self.cache.max_size = value
-        self._cache_size = self.cache.max_size
+
+    @property
+    def valid_for(self):
+        return self.cache.valid_for
+    
+    @valid_for.setter
+    def valid_for(self, val):
+        self.cache.valid_for = val
 
     def hash_function(self, func):
         return hash_function(func, hasher = self.hasher())
@@ -222,19 +228,16 @@ class FunctionCacher(ShelveCacher):
 
         '''
         
-
+        old_cache_size = self.cache_size
+        old_valid_for = self.valid_for
         cache = super().load_cache(path, inplace, *args, **kwargs)
         match (inplace, overwrite_loaded_cache_attributes):
             case (True, True):
-                # should set the cache as well
-                self.cache_size = self.cache_size
-                self.cache.valid_for = self.valid_for
-            case (True, False):
-                self.cache_size = self.cache.max_size
-                self.valid_for = self.cache.valid_for
+                self.cache_size = old_cache_size
+                self.cache.valid_for = old_valid_for
             case (False, True):
-                cache.max_size = self.cache_size
-                cache.valid_for = self.valid_for
+                cache.max_size = old_cache_size
+                cache.valid_for = old_valid_for
 
         return cache
     

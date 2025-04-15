@@ -94,8 +94,9 @@ class AbstractCacher(abc.ABC):
             "cache": self.cache_to_state_cache()
         }
     
+    @classmethod
     @abc.abstractmethod
-    def new_cache(self) -> CacheObject:
+    def new_cache(cls) -> CacheObject:
         '''
         Return a new cache object.
         '''

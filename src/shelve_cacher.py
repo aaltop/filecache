@@ -14,7 +14,8 @@ class ShelveCacher(AbstractCacher):
     file.
     '''
 
-    def new_cache(self):
+    @classmethod
+    def new_cache(cls):
         return {}
 
     def get_state(self) -> CacherState[dict]:
