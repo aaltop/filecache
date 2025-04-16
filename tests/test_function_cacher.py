@@ -231,12 +231,15 @@ def test_cache_size_after_load(tmp_path: Path):
     assert function_cache.cache.max_size == 3
 
 
-def test_lookup_function_cache():
+def test_lookup_function_cache(tmp_path):
     ''' 
     Function's cached data can be looked up.
     '''
 
-    function_cache = FunctionCacher()
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function(dummy_val):
@@ -272,13 +275,16 @@ def test_clear_cache(tmp_path):
     with pytest.raises(StateNotFoundError):
         cac = function_cache.load_cache()
 
-def test_returns_copy():
+def test_returns_copy(tmp_path):
     '''
     Output from cached function can be modified without the contents
     of the cache changing.
     '''
     
-    function_cache = FunctionCacher()
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function():
@@ -290,10 +296,13 @@ def test_returns_copy():
     dummy_function()["value"] += 1
     assert dummy_function()["value"] == 0
 
-def test_invocation_sets_cache_timestamp():
+def test_invocation_sets_cache_timestamp(tmp_path):
     '''Invoking a wrapped function sets the timestamp in the cache'''
 
-    function_cache = FunctionCacher()
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    function_cache = FunctionCacher(save_path = cache_path)
 
     @function_cache()
     def dummy_function():
@@ -361,3 +370,28 @@ class TestAutoSave:
         # creating new value should cause cache to be saved
         dummy_function(value = 1)
         assert len(next(iter(function_cache.load_cache(inplace=False).values()))) == 2
+
+def test_auto_load(tmp_path):
+    '''
+    Auto-loading cache works
+    '''
+
+    cache_path = tmp_path / "cache"
+    cache_path.mkdir()
+
+    # auto-load should default to True
+    function_cache = FunctionCacher(save_path = cache_path, auto_load = False)
+
+    @function_cache()
+    def dummy_function(value = 0):
+        return { "value": value }
+    
+    dummy_function()
+    assert len(next(iter(function_cache.cache.values()))) == 1
+
+    new_function_cacher = FunctionCacher(save_path = cache_path)
+    assert len(new_function_cacher.cache) == 0
+
+    function_cache.save()
+    new_function_cacher = FunctionCacher(save_path = cache_path)
+    assert len(next(iter(new_function_cacher.cache.values()))) == 1

@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 from src.utils.string import pascal_to_snake_case
 from src.typing import Hasher
+from src.exceptions import StateNotFoundError
 
 type CacheObject = Any
 type StateCacheObject = Any
@@ -35,7 +36,8 @@ class AbstractCacher(abc.ABC):
         save_path: Path = None,
         *,
         hasher: Callable[[], Hasher] = lambda: hashlib.sha256(usedforsecurity=False),
-        auto_save = False
+        auto_save = False,
+        auto_load = True
     ):
         '''
 
@@ -54,6 +56,9 @@ class AbstractCacher(abc.ABC):
                 NOTE: The behaviour for auto-save needs to be defined
                 in inheriting classes. The methods `.perform_auto_save` and
                 `.auto_save_after` should be used for this.
+            auto_load:
+                Whether an attempt should be made to automatically
+                load the cache from `save_path`.
 
         '''
 
@@ -66,6 +71,19 @@ class AbstractCacher(abc.ABC):
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
         self._auto_save = False
         self.auto_save = auto_save
+
+        if auto_load:
+            self.init_load()
+
+    def init_load(self):
+        '''
+        Called during initialisation if `auto_load` is true.
+        Should attempt to load the cache (e.g. using `.load_cache`).
+        '''
+        try:
+            self.load_cache(inplace = True)
+        except StateNotFoundError:
+            pass
 
     @property
     def auto_save(self):

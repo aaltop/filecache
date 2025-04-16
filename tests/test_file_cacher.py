@@ -156,3 +156,34 @@ class TestAutoSave:
         
         file_cacher.hash_files([content_folder], depth = 1)
         assert len(file_cacher.load_cache(relative = False)) == 3
+
+def test_auto_load(tmp_path, test_folder_text, monkeypatch):
+    '''
+    Auto-loading cache works
+    '''
+
+    def init_load(self: FileCacher):
+        try:
+            # need to do relative again
+            self.load_cache(inplace = True, relative = False)
+        except StateNotFoundError:
+            pass
+
+    monkeypatch.setattr(FileCacher, "init_load", init_load)
+
+    content_folder = tmp_path / "content"
+    write_dict_files(content_folder, test_folder_text)
+    cache_path = tmp_path / "cache"
+    file_cacher = FileCacher(save_path = cache_path)
+    file_cacher.hash_files([content_folder], depth = 1)
+
+    assert len(file_cacher.cache) == 3
+    new_file_cacher = FileCacher(save_path = cache_path)
+    # nothing auto-loaded as not saved yet
+    with pytest.raises(StateNotFoundError):
+        new_file_cacher.load_cache(relative = False)
+
+    # save allows auto-loading to succeed
+    file_cacher.save()
+    new_file_cacher = FileCacher(save_path = cache_path)
+    assert len(new_file_cacher.cache) == 3
