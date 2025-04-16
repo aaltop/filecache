@@ -21,12 +21,16 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         super().__init__(*args, **kwargs)
         self.cache: Cache
 
+    def set_auto_save(self, val):
+        return super().set_auto_save(val)
+
     def cache_to_state_cache(self):
         '''
         Return the cache with the paths as absolute strings.
         '''
         return {str(file.absolute()): digest for file, digest in self.cache.items()}
 
+    @JsonCacher.auto_save_after()
     def hash_file(self, file: Path):
         '''
         Add a hash of the contents of `file` to cache.
@@ -38,6 +42,7 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         self.cache[file] = hash_object.hexdigest()
         return self
     
+    @JsonCacher.auto_save_after()
     def hash_files(
         self,
         paths: list[Path],
@@ -61,9 +66,10 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
                 flattened_paths
             )
 
-        for path in flattened_paths:
-            self.hash_file(path)
-
+        # don't want to auto-save each time hash_file is invoked
+        with self.temp_auto_save(False):
+            for path in flattened_paths:
+                self.hash_file(path)
         return self
     
     def state_cache_to_cache(self, state_cache: CacherState[dict], relative = True):

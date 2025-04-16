@@ -2,6 +2,8 @@ import abc
 import hashlib
 from pathlib import Path
 from typing import Self, Any, TypedDict, Callable
+from functools import wraps
+from contextlib import contextmanager
 
 from src.utils.string import pascal_to_snake_case
 from src.typing import Hasher
@@ -28,7 +30,13 @@ class AbstractCacher(abc.ABC):
 
         cls.name_as_snake = pascal_to_snake_case(cls.__name__)
 
-    def __init__(self, save_path: Path = None, *, hasher: Callable[[], Hasher] = lambda: hashlib.sha256(usedforsecurity=False)):
+    def __init__(
+        self,
+        save_path: Path = None,
+        *,
+        hasher: Callable[[], Hasher] = lambda: hashlib.sha256(usedforsecurity=False),
+        auto_save = False
+    ):
         '''
 
         Arguments:
@@ -39,6 +47,13 @@ class AbstractCacher(abc.ABC):
                 Pascal case.)
             hasher:
                 Factory returning a hashlib-type hasher.
+            auto_save:
+                Whether the cache should be automatically saved
+                when a new value is set in it.
+
+                NOTE: The behaviour for auto-save needs to be defined
+                in inheriting classes. The methods `.perform_auto_save` and
+                `.auto_save_after` should be used for this.
 
         '''
 
@@ -49,6 +64,59 @@ class AbstractCacher(abc.ABC):
         self.cache = self.new_cache()
         self.save_path = self.create_save_path(save_path)
         self.save_path.parents[0].mkdir(parents=True, exist_ok=True)
+        self._auto_save = False
+        self.auto_save = auto_save
+
+    @property
+    def auto_save(self):
+        return self._auto_save
+    
+    @abc.abstractmethod
+    def set_auto_save(self, val: bool):
+        if not isinstance(val, bool):
+            raise TypeError("auto_save should be a boolean")
+        self._auto_save = val
+
+    @auto_save.setter
+    def auto_save(self, val: bool):
+        self.set_auto_save(val)
+
+    def perform_auto_save(self):
+        '''
+        Perform an auto-save if the attribute is set to True.
+        '''
+        if self.auto_save:
+            self.save()
+
+    @staticmethod
+    def auto_save_after():
+        '''
+        Wrapper that will auto-save if the self passed to `method`
+        has an auto_save attribute set to True. 
+        '''
+        def outer_wrapper(method):
+
+            @wraps(method)
+            def wrapper_method(self: AbstractCacher, *args, **kwargs):
+                ret = method(self, *args, **kwargs)
+                self.perform_auto_save()
+                return ret
+
+            return wrapper_method
+        
+        return outer_wrapper
+
+    @contextmanager
+    def temp_auto_save(self, temp_value):
+        '''
+        Context manager for temporarily setting the value of
+        `auto_save`.
+        '''
+        old_value = self.auto_save
+        try:
+            yield temp_value
+        finally:
+            self.auto_save = old_value
 
     def create_save_path(self, path: Path | None = None, file_suffix = ""):
 

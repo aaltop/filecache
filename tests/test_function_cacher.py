@@ -302,3 +302,62 @@ def test_invocation_sets_cache_timestamp():
     assert len(function_cache.cache._last_accessed) == 0
     dummy_function()
     assert len(function_cache.cache._last_accessed) == 1
+
+class TestAutoSave:
+
+    def test_auto_save_init_attribute(self, tmp_path):
+        '''
+        Cacher can be set to automatically save after each invocation
+        when initialising
+        '''
+
+        cache_path = tmp_path / "cache"
+        cache_path.mkdir()
+
+        function_cache = FunctionCacher(save_path = cache_path, auto_save = True)
+
+        @function_cache()
+        def dummy_function():
+            return { "value": 0 }
+        
+        with pytest.raises(StateNotFoundError):
+            function_cache.load_cache(inplace=False)
+
+        dummy_function()
+
+        assert len(function_cache.load_cache(inplace=False)) == 1
+
+    def test_auto_save_property(self, tmp_path):
+        '''
+        Cacher can be set to automatically save after each invocation
+        through a property
+        '''
+
+        cache_path = tmp_path / "cache"
+        cache_path.mkdir()
+
+        # auto save should default to False
+        function_cache = FunctionCacher(save_path = cache_path)
+
+        @function_cache()
+        def dummy_function(value = 0):
+            return { "value": value }
+        
+        with pytest.raises(StateNotFoundError):
+            function_cache.load_cache(inplace=False)
+
+        dummy_function()
+
+        # not saved yet
+        with pytest.raises(StateNotFoundError):
+            function_cache.load_cache(inplace=False)
+
+        function_cache.auto_save = True
+        # When value is gotten from cache, auto-save is not performed 
+        dummy_function()
+        with pytest.raises(StateNotFoundError):
+            function_cache.load_cache(inplace=False)
+
+        # creating new value should cause cache to be saved
+        dummy_function(value = 1)
+        assert len(next(iter(function_cache.load_cache(inplace=False).values()))) == 2

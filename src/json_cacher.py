@@ -2,8 +2,6 @@
 Base class that saves its cache as JSON.
 '''
 
-import hashlib
-import abc
 from pathlib import Path
 import json
 

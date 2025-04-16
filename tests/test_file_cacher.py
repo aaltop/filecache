@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 from src.file_cacher import FileCacher
 from src.utils.path import write_dict_files
@@ -95,3 +96,63 @@ def test_clear_cache(tmp_path, test_folder_text):
     assert len(file_cacher.cache) == 0
     with pytest.raises(StateNotFoundError):
         file_cacher.load_cache(relative = False)
+
+
+class TestAutoSave:
+
+    def test_auto_save_init_attribute(self, tmp_path, test_folder_text):
+        '''
+        Cacher can be set to automatically save after each invocation
+        when initialising
+        '''
+
+        content_folder = tmp_path / "content"
+        write_dict_files(content_folder, test_folder_text)
+        cache_path = tmp_path / "cache"
+        file_cacher = FileCacher(save_path = cache_path)
+        file_cacher.hash_files([content_folder])
+        with pytest.raises(StateNotFoundError):
+            file_cacher.load_cache(relative = False)
+        
+        file_cacher = FileCacher(save_path = cache_path, auto_save = True)
+        file_cacher.hash_files([content_folder], depth = 1)
+        assert len(file_cacher.load_cache(relative = False)) == 3
+
+
+    def test_auto_save_property(self, tmp_path, test_folder_text):
+        '''
+        Cacher can be set to automatically save after each invocation
+        through a property
+        '''
+
+        content_folder = tmp_path / "content"
+        write_dict_files(content_folder, test_folder_text)
+        cache_path = tmp_path / "cache"
+        file_cacher = FileCacher(save_path = cache_path)
+        file_cacher.hash_files([content_folder])
+        with pytest.raises(StateNotFoundError):
+            file_cacher.load_cache(relative = False)
+        
+        file_cacher.auto_save = True
+        file_cacher.hash_files([content_folder], depth = 1)
+        print(file_cacher.load_cache(relative = False))
+        assert len(file_cacher.load_cache(relative = False)) == 3
+
+    def test_save_all_and_invidiual(self, tmp_path: Path, test_folder_text):
+        '''
+        Cacher saves on both the individual hash function and vectorised
+        one.
+        '''
+
+        content_folder = tmp_path / "content"
+        write_dict_files(content_folder, test_folder_text)
+        cache_path = tmp_path / "cache"
+        file_cacher = FileCacher(save_path = cache_path, auto_save = True)
+        for fso in content_folder.iterdir():
+            if fso.is_file():
+                file_cacher.hash_file(fso)
+                break
+        assert len(file_cacher.load_cache(relative = False)) == 1
+        
+        file_cacher.hash_files([content_folder], depth = 1)
+        assert len(file_cacher.load_cache(relative = False)) == 3

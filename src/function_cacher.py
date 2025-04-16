@@ -88,6 +88,9 @@ class FunctionCacher(ShelveCacher):
         
         self._function_name_to_hash: dict[str, str] = {}
 
+    def set_auto_save(self, val):
+        return super().set_auto_save(val)
+
     @classmethod
     def new_cache(cls):
         return DequeCache[InputOutputDict]()
@@ -175,6 +178,7 @@ class FunctionCacher(ShelveCacher):
                 # the new invocation should be the first item
                 # (most recently used)
                 self.cache.get_and_update(function_hash)[0] |= {"output": copy.deepcopy(output)}
+                self.perform_auto_save()
                 return output
             
             return wrapper_func
