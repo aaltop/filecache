@@ -57,3 +57,4 @@ class ShelveCacher(AbstractCacher):
 
     def clear_file_cache(self, path = None):
         clear_shelve(path)
+        return self

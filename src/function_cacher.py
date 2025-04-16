@@ -244,3 +244,4 @@ class FunctionCacher(ShelveCacher):
     def clear_memory_cache(self):
         for key in self.cache:
             self.cache[key].clear()
+        return self

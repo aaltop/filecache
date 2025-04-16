@@ -154,12 +154,14 @@ class AbstractCacher(abc.ABC):
         '''
         path = self.save_path if path is None else path
         path.unlink(missing_ok = True)
+        return self
 
     def clear_memory_cache(self):
         '''
         Clear `self.cache`.
         '''
         self.cache = self.new_cache()
+        return self
         
     def clear(self, path: Path | None = None):
         '''
@@ -173,3 +175,4 @@ class AbstractCacher(abc.ABC):
         path = self.save_path if path is None else path
         self.clear_file_cache(path)
         self.clear_memory_cache()
+        return self
