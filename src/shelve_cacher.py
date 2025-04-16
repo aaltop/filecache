@@ -24,7 +24,7 @@ class ShelveCacher(AbstractCacher):
     def cache_to_state_cache(self) -> dict:
         return super().cache_to_state_cache()
     
-    def state_cache_to_cache(self, state_cache) -> dict:
+    def state_cache_to_cache(self, state_cache, *args, **kwargs) -> dict:
         return super().state_cache_to_cache(state_cache)
 
     def save(self, path = None) -> Self:
@@ -52,8 +52,14 @@ class ShelveCacher(AbstractCacher):
             raise StateNotFoundError()
         return state
     
-    def load_cache(self, path = None, inplace=False, *args, **kwargs) -> dict | Self:
-        return super().load_cache(path, inplace, *args, **kwargs)
+    def load_cache(self, path = None, *args, inplace=False, overwrite_loaded_cache_attributes=False, **kwargs) -> dict | Self:
+        return super().load_cache(
+            path,
+            *args,
+            inplace=inplace,
+            overwrite_loaded_cache_attributes=overwrite_loaded_cache_attributes,
+            **kwargs
+        )
 
     def clear_file_cache(self, path = None):
         clear_shelve(path)

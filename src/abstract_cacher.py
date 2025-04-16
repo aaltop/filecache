@@ -206,7 +206,23 @@ class AbstractCacher(abc.ABC):
             StateNotFoundError:
         '''
 
-    def load_cache(self, path: Path | None = None, inplace = False, *args, **kwargs):
+    def overwrite_cache(self, loaded_cache: CacheObject, overwrite_loaded = False):
+        '''
+        Overwrite either the loaded cache's attributes or self.cache's
+        attributes. Will be called in `.load_cache`, unless loading
+        is not in-place and overwrite of loaded is not wanted.
+
+        Arguments:
+            loaded_cache:
+                The cache that has been loaded in.
+            overwrite_loaded:
+                Whether to overwrite the loaded cache's attributes.
+                If False, overwrite the attributes of `self.cache`.
+        '''
+        # nothing to do, so just return here
+        return loaded_cache
+
+    def load_cache(self, path: Path | None = None, *args, inplace = False, overwrite_loaded_cache_attributes = False, **kwargs):
         '''
         Load the cache.
 
@@ -219,6 +235,17 @@ class AbstractCacher(abc.ABC):
                 Passed to `.cache_from_state_cache`.
             kwargs:
                 Passed to `.cache_from_state_cache`.
+            overwrite_loaded_cache_attributes:
+                Whether to overwrite the attributes of the loaded
+                cache with the current attributes or vice versa.
+                
+                By default, the loaded cache's attributes replace
+                if the operation is performed
+                in place. if not `inplace`, the loaded cache's
+                attributes are replaced if `overwrite_loaded_cache_attributes` is
+                True, but if False, the cacher's (`self`'s)
+                attributes do not change (i.e. this argument has
+                no effect).
             
         Raises:
             StateNotFoundError:
@@ -227,10 +254,14 @@ class AbstractCacher(abc.ABC):
         path = self.save_path if path is None else path
         state = self.load(path)
         cache = self.state_cache_to_cache(state["cache"], *args, **kwargs)
+        
         if inplace:
+            cache = self.overwrite_cache(cache, overwrite_loaded_cache_attributes)
             self.cache = cache
             return self
         else:
+            if overwrite_loaded_cache_attributes:
+                cache = self.overwrite_cache(cache, True)
             return cache
     
     @abc.abstractmethod

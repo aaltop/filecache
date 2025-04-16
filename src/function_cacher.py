@@ -196,54 +196,36 @@ class FunctionCacher(ShelveCacher):
     def cache_to_state_cache(self) -> Cache:
         return self.cache
     
-    def state_cache_to_cache(self, state_cache: Cache) -> Cache:
-        return state_cache
+    def state_cache_to_cache(self, state_cache: Cache, *args, **kwargs) -> Cache:
+        return super().state_cache_to_cache(state_cache, *args, **kwargs)
     
     def get_state(self) -> CacherState[Cache]:
         return super().get_state()
+    
+    def load_cache(self, path=None, *args, inplace=False, overwrite_loaded_cache_attributes=False, **kwargs) -> Cache | Self:
+        return super().load_cache(
+            path,
+            *args,
+            inplace=inplace,
+            overwrite_loaded_cache_attributes=overwrite_loaded_cache_attributes,
+            **kwargs
+        )
 
     def load(self, path=None) -> CacherState[Cache]:
         return super().load(path)
     
-    def load_cache(
-        self,
-        path = None,
-        *args,
-        inplace = False,
-        overwrite_loaded_cache_attributes = False,
-        **kwargs
-    ) -> Cache | Self:
-        '''
-        See AbstractCacher.
-
-        Arguments:
-            overwrite_loaded_cache_attributes:
-                Whether to overwrite the attributes of the loaded
-                cache with the current attributes or vice versa.
-                
-                
-                By default, the loaded cache's attributes replace
-                if the operation is performed
-                in place. if not `inplace`, the loaded cache's
-                attributes are replaced if `overwrite_loaded_cache_attributes` is
-                True, but if False, the cacher's (`self`'s)
-                attributes do not change (i.e. this argument has
-                no effect).
-
-        '''
+    def overwrite_cache(self, loaded_cache: Cache, overwrite_loaded=False):
         
         old_cache_size = self.cache_size
         old_valid_for = self.valid_for
-        cache = super().load_cache(path, inplace, *args, **kwargs)
-        match (inplace, overwrite_loaded_cache_attributes):
-            case (True, True):
-                self.cache_size = old_cache_size
-                self.cache.valid_for = old_valid_for
-            case (False, True):
-                cache.max_size = old_cache_size
-                cache.valid_for = old_valid_for
-
-        return cache
+        if overwrite_loaded:
+            loaded_cache.max_size = old_cache_size
+            loaded_cache.valid_for = old_valid_for
+        else:
+            self.cache_size = loaded_cache.max_size
+            self.valid_for = loaded_cache.valid_for
+        
+        return loaded_cache
     
     def clear_memory_cache(self):
         for key in self.cache:
