@@ -3,6 +3,8 @@ from pathlib import Path
 import dbm
 from typing import TypedDict
 
+from src.exceptions import DatabaseReadError
+
 
 def save_dict(save_path: Path, _dict: dict) -> None:
     '''
@@ -39,13 +41,17 @@ class DeletedDatabase(TypedDict):
 def clear_shelve(save_path: Path) -> DeletedDatabase:
     '''
     Remove the shelve data at `save_path`.
+
+    Raises:
+        DatabaseReadError:
     '''
 
     db_type = dbm.whichdb(save_path)
     deletion_info: DeletedDatabase = {"database_type": db_type, "deleted_files": {}}
     # TODO: figure out the other dbms' file extension cases
     # see open methods? (e.g. https://docs.python.org/3/library/dbm.html#dbm.ndbm.open
-    # talks of .dir and .pag, though dbm.dumb's one doesn't mention .bak)
+    # talks of .dir and .pag, though dbm.dumb's one doesn't mention .bak,
+    # which it does include, so hard to say. Would have to test)
     match db_type:
         case "dbm.sqlite3":
             try:
@@ -68,5 +74,16 @@ def clear_shelve(save_path: Path) -> DeletedDatabase:
                     suffixes_deleted[file_path] = False
 
             deletion_info["deleted_files"] = suffixes_deleted
+        
+        case "":
+            raise DatabaseReadError("Unrecognized database type")
+        
+        case None:
+            raise DatabaseReadError("Could not read database file")
+
+        # should be the last two dbm possibilities, for which
+        # there is obviously no implementation right now
+        case _:
+            raise NotImplementedError
 
     return deletion_info

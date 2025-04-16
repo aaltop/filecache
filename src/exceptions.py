@@ -1,4 +1,5 @@
 
 
-class StateNotFoundError(Exception):
-    pass
+class StateNotFoundError(Exception): ...
+
+class DatabaseReadError(Exception): ...
