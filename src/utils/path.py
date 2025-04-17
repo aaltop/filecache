@@ -65,7 +65,7 @@ def write_dict_files(base_path: Path, folder_structure: FolderStructure):
         path:
         folder_structure:
             If a key points to
-                - dict: key is folder name, FolderStructure is
+                - dict: key is folder name, dict is another FolderStructure
                 - string: key is file name, string is written to file
                 - bytes: key is file name, bytes are written to file
     '''

@@ -91,7 +91,10 @@ class FileCacher(JsonCacher, AbstractCacheComparisonMixin):
         }
         
 
-    def compare_caches(self, other: Cache | None = None) -> dict[Path, bool]:
-
-        other = self.load() if other is None else other
+    def compare_caches(self, other: Cache) -> dict[Path, bool]:
+        '''
+        Compares `self.cache` and `other`,
+        Returning True for all keys in `self.cache` where either the
+        key is not in `other` or the matching value is different.
+        '''
         return compare_dict_values(self.cache, other)

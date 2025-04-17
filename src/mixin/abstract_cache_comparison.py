@@ -11,9 +11,7 @@ class AbstractCacheComparisonMixin(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def compare_caches(self, other: CacheObject = None) -> Any:
+    def compare_caches(self, other: CacheObject) -> Any:
         '''
         Compare the values in `self.cache` and in `other`.
-
-        By default, `other` is gotten using `self.load()`.
         '''

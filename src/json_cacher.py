@@ -35,6 +35,11 @@ class JsonCacher(AbstractCacher):
         Save the state as a json file.
         '''
 
+        json_kwargs = dict(indent = 4) | (
+            {}
+            if json_kwargs is None
+            else json_kwargs
+        )
         path = self.save_path if path is None else path
         json_kwargs = {} if json_kwargs is None else json_kwargs
 

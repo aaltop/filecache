@@ -66,6 +66,9 @@ def test_comparison(tmp_path, test_folder_text):
     assert all(is_different.values())
     # =============================================================
 
+    file_cacher_newer.save()
+    assert not any(file_cacher_newer.compare_caches(file_cacher_newer.load_cache(relative = False)).values())
+
 def test_save_and_load(tmp_path, test_folder_text):
     '''Saving and loading works'''
 
