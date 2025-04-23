@@ -5,9 +5,9 @@ from typing import Self, Any, TypedDict, Callable
 from functools import wraps
 from contextlib import contextmanager
 
-from src.filecache.utils.string import pascal_to_snake_case
-from src.filecache.typing import Hasher
-from src.filecache.exceptions import StateNotFoundError
+from .utils.string import pascal_to_snake_case
+from .typing import Hasher
+from .exceptions import StateNotFoundError
 
 type CacheObject = Any
 type StateCacheObject = Any

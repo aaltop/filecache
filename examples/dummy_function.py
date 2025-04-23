@@ -7,7 +7,7 @@ root_path = os.path.abspath(os.path.join(os.getcwd(), '..'))
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
 
-from src.function_cacher import FunctionCacher
+from src.filecache.function_cacher import FunctionCacher
 
 function_cacher = FunctionCacher(
     save_path = Path() / "caches" / __name__ / "cache",

@@ -5,8 +5,8 @@ Class that saves its cache using the shelve module.
 from typing import Self
 
 from .abstract_cacher import AbstractCacher, CacherState
-from src.filecache.utils.shelve import load_dict, save_dict, clear_shelve
-from src.filecache.exceptions import StateNotFoundError
+from .utils.shelve import load_dict, save_dict, clear_shelve
+from .exceptions import StateNotFoundError
 
 class ShelveCacher(AbstractCacher):
     '''

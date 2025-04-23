@@ -3,7 +3,7 @@ from collections.abc import Callable
 from hashlib import sha256
 from typing import Any
 
-from src.filecache.typing import Hasher
+from ..typing import Hasher
 
 
 def function_hash(function: Callable, *, hasher: Hasher | None = None)  -> str:
