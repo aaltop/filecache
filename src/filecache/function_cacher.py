@@ -17,13 +17,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .shelve_cacher import ShelveCacher
-from src.utils.inspect import (
+from src.filecache.utils.inspect import (
     function_hash as hash_function,
     bind_arguments, unique_name
 )
-from src.deque_cache import DequeCache
-from src.abstract_cacher import CacherState
-from src.utils.compare import compare_dict_values, CompareFuncs
+from src.filecache.deque_cache import DequeCache
+from src.filecache.abstract_cacher import CacherState
+from src.filecache.utils.compare import compare_dict_values, CompareFuncs
 
 
 

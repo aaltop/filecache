@@ -10,9 +10,9 @@ import json
 
 from .utils.path import expand_directories, match_all
 from .json_cacher import JsonCacher
-from src.mixin.abstract_cache_comparison import AbstractCacheComparisonMixin
-from src.utils.compare import compare_dict_values
-from src.abstract_cacher import CacherState
+from src.filecache.mixin.abstract_cache_comparison import AbstractCacheComparisonMixin
+from src.filecache.utils.compare import compare_dict_values
+from src.filecache.abstract_cacher import CacherState
 
 type Cache = dict[Path, str]
 class FileCacher(JsonCacher, AbstractCacheComparisonMixin):

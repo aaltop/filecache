@@ -1,7 +1,7 @@
 from hashlib import sha256
 import inspect as base_inspect
 
-from src.utils import inspect
+from src.filecache.utils import inspect
 
 
 

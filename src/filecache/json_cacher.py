@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 
 from .abstract_cacher import AbstractCacher, CacherState
-from src.exceptions import StateNotFoundError
+from src.filecache.exceptions import StateNotFoundError
 
 class JsonCacher(AbstractCacher):
 

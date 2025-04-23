@@ -4,7 +4,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 import datetime as dt
 
-from src.invalidation_dict import InvalidationDict
+from src.filecache.invalidation_dict import InvalidationDict
 
 def maxlen(value: int | None) -> int | None:
 

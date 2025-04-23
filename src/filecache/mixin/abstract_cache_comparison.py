@@ -5,7 +5,7 @@ Mixin intended for classes that implement AbstractCacher.
 import abc
 from typing import Any
 
-from src.abstract_cacher import CacheObject
+from src.filecache.abstract_cacher import CacheObject
 
 class AbstractCacheComparisonMixin(abc.ABC):
 

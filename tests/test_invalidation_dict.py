@@ -3,7 +3,7 @@ import pytest
 import datetime as dt
 import time
 
-from src.invalidation_dict import InvalidationDict
+from src.filecache.invalidation_dict import InvalidationDict
 
 
 def test_invalidation_time():

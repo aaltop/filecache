@@ -2,7 +2,7 @@ import pytest
 
 from collections import deque
 
-from src.deque_cache import DequeCache
+from src.filecache.deque_cache import DequeCache
 
 
 

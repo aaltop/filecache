@@ -3,7 +3,7 @@ from pathlib import Path
 import dbm
 from typing import TypedDict
 
-from src.exceptions import DatabaseReadError
+from src.filecache.exceptions import DatabaseReadError
 
 
 def save_dict(save_path: Path, _dict: dict) -> None:
