@@ -1,0 +1,24 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.3' 
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: '0.6.16'
+      - run: uv run pytest
