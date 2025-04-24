@@ -101,19 +101,21 @@ source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [
-    { name = "ipykernel" },
     { name = "pandas" },
     { name = "pytest" },
+]
+notebook = [
+    { name = "ipykernel" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pytest", specifier = ">=8.3.4" },
 ]
+notebook = [{ name = "ipykernel", specifier = ">=6.29.5" }]
 
 [[package]]
 name = "iniconfig"
