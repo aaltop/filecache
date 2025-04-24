@@ -1,5 +1,5 @@
 [project]
-name = "FileCache"
+name = "filecacheutils"
 version = "0.1.0"
 description = "Various caching utilities"
 authors = [
@@ -11,10 +11,9 @@ requires-python = ">=3.13.3"
 readme = "README.md"
 license = {text = "MIT"}
 
-
-[tool.pdm]
-distribution = false
-
+[build-system]
+requires = ["pdm-backend >= 2.4.4"]
+build-backend = "pdm.backend"
 
 [dependency-groups]
 dev = [

@@ -20,10 +20,9 @@ __pycache__
 !.git-blame-ignore-revs
 
 !README.md
-# pdm stuff
+# package manager stuff
 !pyproject.toml
-!pdm.lock
-
+!uv.lock
 
 
 # ================
