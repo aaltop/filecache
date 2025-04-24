@@ -15,7 +15,9 @@ __pycache__
 
 # files to include
 # ----------------
+
 !.gitignore
+!.git-blame-ignore-revs
 
 !README.md
 # pdm stuff
