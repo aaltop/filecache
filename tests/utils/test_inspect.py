@@ -1,7 +1,6 @@
 from hashlib import sha256
-import inspect as base_inspect
 
-from src.filecache.utils import inspect
+from filecache.utils import inspect
 
 
 def test_function_hash():

@@ -1,4 +1,4 @@
-from src.filecache.utils.shelve import save_dict, load_dict, clear_shelve
+from filecache.utils.shelve import save_dict, load_dict, clear_shelve
 
 
 def test_save_and_load(tmp_path):

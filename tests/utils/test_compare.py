@@ -1,6 +1,6 @@
 import pytest
 
-from src.filecache.utils.compare import compare_dict_values, all_instance_of
+from filecache.utils.compare import compare_dict_values, all_instance_of
 
 
 def test_simple_compare():

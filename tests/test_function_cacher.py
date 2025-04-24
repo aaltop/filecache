@@ -5,9 +5,9 @@ from pathlib import Path
 import string
 from collections import deque
 
-from src.filecache.function_cacher import FunctionCacher
-from src.filecache.exceptions import StateNotFoundError
-from src.filecache.utils.compare import all_instance_of
+from filecache.function_cacher import FunctionCacher
+from filecache.exceptions import StateNotFoundError
+from filecache.utils.compare import all_instance_of
 
 
 # NOTE: tmp_path is a pytest thing

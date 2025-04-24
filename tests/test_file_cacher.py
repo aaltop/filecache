@@ -1,9 +1,9 @@
 import pytest
 from pathlib import Path
 
-from src.filecache.file_cacher import FileCacher
-from src.filecache.utils.path import write_dict_files
-from src.filecache.exceptions import StateNotFoundError
+from filecache.file_cacher import FileCacher
+from filecache.utils.path import write_dict_files
+from filecache.exceptions import StateNotFoundError
 
 
 @pytest.fixture
