@@ -1,5 +1,4 @@
-
-
 class StateNotFoundError(Exception): ...
+
 
 class DatabaseReadError(Exception): ...

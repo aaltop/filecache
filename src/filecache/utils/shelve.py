@@ -7,9 +7,9 @@ from ..exceptions import DatabaseReadError
 
 
 def save_dict(save_path: Path, _dict: dict) -> None:
-    '''
+    """
     Save `_dict` as shelve database data at `save_path`.
-    '''
+    """
 
     with shelve.open(save_path) as db:
 
@@ -17,9 +17,9 @@ def save_dict(save_path: Path, _dict: dict) -> None:
 
 
 def load_dict(save_path: Path) -> dict:
-    '''
+    """
     Load the shelve data from `save_path`.
-    '''
+    """
 
     _dict = {}
 
@@ -29,22 +29,25 @@ def load_dict(save_path: Path) -> dict:
 
     return _dict
 
+
 class DeletedDatabase(TypedDict):
-    '''
+    """
     Properties:
         deleted_files:
             Whether a given path was deleted successfully.
-    '''
+    """
+
     database_type: str | None
     deleted_files: dict[Path, bool]
 
+
 def clear_shelve(save_path: Path) -> DeletedDatabase:
-    '''
+    """
     Remove the shelve data at `save_path`.
 
     Raises:
         DatabaseReadError:
-    '''
+    """
 
     db_type = dbm.whichdb(save_path)
     deletion_info: DeletedDatabase = {"database_type": db_type, "deleted_files": {}}
@@ -55,7 +58,7 @@ def clear_shelve(save_path: Path) -> DeletedDatabase:
     match db_type:
         case "dbm.sqlite3":
             try:
-                save_path.unlink(missing_ok = False)
+                save_path.unlink(missing_ok=False)
                 deletion_info["deleted_files"][save_path] = True
             except FileNotFoundError:
                 deletion_info["deleted_files"][save_path] = False
@@ -68,16 +71,16 @@ def clear_shelve(save_path: Path) -> DeletedDatabase:
             for suffix in file_suffixes:
                 file_path = save_path.parent / f"{file_prefix}.{suffix}"
                 try:
-                    file_path.unlink(missing_ok = False)
+                    file_path.unlink(missing_ok=False)
                     suffixes_deleted[file_path] = True
                 except FileNotFoundError:
                     suffixes_deleted[file_path] = False
 
             deletion_info["deleted_files"] = suffixes_deleted
-        
+
         case "":
             raise DatabaseReadError("Unrecognized database type")
-        
+
         case None:
             raise DatabaseReadError("Could not read database file")
 

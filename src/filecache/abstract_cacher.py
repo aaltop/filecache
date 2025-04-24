@@ -12,15 +12,17 @@ from .exceptions import StateNotFoundError
 type CacheObject = Any
 type StateCacheObject = Any
 
+
 class CacherMetadata(TypedDict):
 
     hash_algorithm: str
+
 
 class CacherState[T](TypedDict):
 
     metadata: CacherMetadata
     cache: T
-    
+
 
 class AbstractCacher(abc.ABC):
 
@@ -36,14 +38,14 @@ class AbstractCacher(abc.ABC):
         save_path: Path = None,
         *,
         hasher: Callable[[], Hasher] = lambda: hashlib.sha256(usedforsecurity=False),
-        auto_save = False,
-        auto_load = True
+        auto_save=False,
+        auto_load=True,
     ):
-        '''
+        """
 
         Arguments:
             save_path:
-                The path to save the cache to, by default 
+                The path to save the cache to, by default
                 "./{class_name}/cache", where {class_name} is the name
                 of the class in snake case. (Assumes that the class name is
                 Pascal case.)
@@ -60,7 +62,7 @@ class AbstractCacher(abc.ABC):
                 Whether an attempt should be made to automatically
                 load the cache from `save_path`.
 
-        '''
+        """
 
         if self.name_as_snake is None:
             self._calculate_name()
@@ -76,19 +78,19 @@ class AbstractCacher(abc.ABC):
             self.init_load()
 
     def init_load(self):
-        '''
+        """
         Called during initialisation if `auto_load` is true.
         Should attempt to load the cache (e.g. using `.load_cache`).
-        '''
+        """
         try:
-            self.load_cache(inplace = True)
+            self.load_cache(inplace=True)
         except StateNotFoundError:
             pass
 
     @property
     def auto_save(self):
         return self._auto_save
-    
+
     @abc.abstractmethod
     def set_auto_save(self, val: bool):
         if not isinstance(val, bool):
@@ -100,18 +102,19 @@ class AbstractCacher(abc.ABC):
         self.set_auto_save(val)
 
     def perform_auto_save(self):
-        '''
+        """
         Perform an auto-save if the attribute is set to True.
-        '''
+        """
         if self.auto_save:
             self.save()
 
     @staticmethod
     def auto_save_after():
-        '''
+        """
         Wrapper that will auto-save if the self passed to `method`
-        has an auto_save attribute set to True. 
-        '''
+        has an auto_save attribute set to True.
+        """
+
         def outer_wrapper(method):
 
             @wraps(method)
@@ -121,93 +124,90 @@ class AbstractCacher(abc.ABC):
                 return ret
 
             return wrapper_method
-        
+
         return outer_wrapper
 
     @contextmanager
     def temp_auto_save(self, temp_value):
-        '''
+        """
         Context manager for temporarily setting the value of
         `auto_save`.
-        '''
+        """
         old_value = self.auto_save
         try:
             yield temp_value
         finally:
             self.auto_save = old_value
 
-    def create_save_path(self, path: Path | None = None, file_suffix = ""):
+    def create_save_path(self, path: Path | None = None, file_suffix=""):
 
         filename = "cache" if len(file_suffix) == 0 else f"cache.{file_suffix}"
         save_path = (
             Path() / self.name_as_snake / filename
-            if path is None 
+            if path is None
             else path / self.name_as_snake / filename
         )
         return save_path
 
     def metadata(self) -> CacherMetadata:
-        '''
+        """
         Get metadata about this cacher.
-        '''
+        """
 
-        return {
-            "hash_algorithm": self.hasher().name
-        }
-    
+        return {"hash_algorithm": self.hasher().name}
+
     @abc.abstractmethod
     def cache_to_state_cache(self) -> StateCacheObject:
-        '''
+        """
         Get the cache such that it is suitable for saving.
-        '''
+        """
         return self.cache
 
     @abc.abstractmethod
-    def state_cache_to_cache(self, state_cache: StateCacheObject, *args, **kwargs) -> CacheObject:
-        '''
+    def state_cache_to_cache(
+        self, state_cache: StateCacheObject, *args, **kwargs
+    ) -> CacheObject:
+        """
         Get the proper cache from the state cache.
-        '''
+        """
         return state_cache
-    
-    def get_state(self) -> CacherState[StateCacheObject]:
-        '''
-        Get all data (the state) relevant to the cacher. State
-        should be saveable as-is using `.save`. 
-        '''
 
-        return {
-            "metadata": self.metadata(),
-            "cache": self.cache_to_state_cache()
-        }
-    
+    def get_state(self) -> CacherState[StateCacheObject]:
+        """
+        Get all data (the state) relevant to the cacher. State
+        should be saveable as-is using `.save`.
+        """
+
+        return {"metadata": self.metadata(), "cache": self.cache_to_state_cache()}
+
     @classmethod
     @abc.abstractmethod
     def new_cache(cls) -> CacheObject:
-        '''
+        """
         Return a new cache object.
-        '''
-    
+        """
+
     @abc.abstractmethod
     def save(self, path: Path | None = None) -> Self:
-        '''
+        """
         Save the state.
 
         If `path` is None, defaults to self.save_path.
-        '''
-    
+        """
+
     @abc.abstractmethod
     def load(self, path: Path | None = None) -> CacherState[StateCacheObject]:
-        '''
+        """
         Load the state as saved by `save()`.
 
         If `path` is None, defaults to self.save_path.
 
         Raises:
             StateNotFoundError:
-        '''
+        """
 
-    def overwrite_cache(self, loaded_cache: CacheObject, overwrite_loaded = False):
-        '''
+    def overwrite_cache(self, loaded_cache: CacheObject, overwrite_loaded=False):
+        """
         Overwrite either the loaded cache's attributes or self.cache's
         attributes. Will be called in `.load_cache`, unless loading
         is not in-place and overwrite of loaded is not wanted.
@@ -218,12 +218,19 @@ class AbstractCacher(abc.ABC):
             overwrite_loaded:
                 Whether to overwrite the loaded cache's attributes.
                 If False, overwrite the attributes of `self.cache`.
-        '''
+        """
         # nothing to do, so just return here
         return loaded_cache
 
-    def load_cache(self, path: Path | None = None, *args, inplace = False, overwrite_loaded_cache_attributes = False, **kwargs):
-        '''
+    def load_cache(
+        self,
+        path: Path | None = None,
+        *args,
+        inplace=False,
+        overwrite_loaded_cache_attributes=False,
+        **kwargs,
+    ):
+        """
         Load the cache.
 
         Arguments:
@@ -238,7 +245,7 @@ class AbstractCacher(abc.ABC):
             overwrite_loaded_cache_attributes:
                 Whether to overwrite the attributes of the loaded
                 cache with the current attributes or vice versa.
-                
+
                 By default, the loaded cache's attributes replace
                 if the operation is performed
                 in place. if not `inplace`, the loaded cache's
@@ -246,15 +253,15 @@ class AbstractCacher(abc.ABC):
                 True, but if False, the cacher's (`self`'s)
                 attributes do not change (i.e. this argument has
                 no effect).
-            
+
         Raises:
             StateNotFoundError:
                 The state to load the cache from was not found.
-        '''
+        """
         path = self.save_path if path is None else path
         state = self.load(path)
         cache = self.state_cache_to_cache(state["cache"], *args, **kwargs)
-        
+
         if inplace:
             cache = self.overwrite_cache(cache, overwrite_loaded_cache_attributes)
             self.cache = cache
@@ -263,31 +270,31 @@ class AbstractCacher(abc.ABC):
             if overwrite_loaded_cache_attributes:
                 cache = self.overwrite_cache(cache, True)
             return cache
-    
+
     @abc.abstractmethod
     def clear_file_cache(self, path: Path | None = None):
-        '''
+        """
         Clear the file cache.
-        '''
+        """
         path = self.save_path if path is None else path
-        path.unlink(missing_ok = True)
+        path.unlink(missing_ok=True)
         return self
 
     def clear_memory_cache(self):
-        '''
+        """
         Clear `self.cache`.
-        '''
+        """
         self.cache = self.new_cache()
         return self
-        
+
     def clear(self, path: Path | None = None):
-        '''
+        """
         Clear cache on file and in memory.
 
         Arguments:
             path:
                 Path of cache file.
-        '''
+        """
 
         path = self.save_path if path is None else path
         self.clear_file_cache(path)

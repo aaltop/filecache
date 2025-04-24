@@ -1,16 +1,16 @@
 import datetime as dt
 
+
 class InvalidationDict[K, V](dict):
-    '''
+    """
     Allows keeping track of when each of its keys were last accessed, allowing
     data to be removed based on a set validity period.
 
     To update, use the (get | set)_and_update methods: normal keyed
     access does not update access time.
-    '''
+    """
 
-
-    def __init__(self, valid_for = dt.timedelta.max):
+    def __init__(self, valid_for=dt.timedelta.max):
 
         self._valid_for = None
         self.valid_for = valid_for
@@ -19,7 +19,7 @@ class InvalidationDict[K, V](dict):
     @property
     def valid_for(self):
         return self._valid_for
-    
+
     @staticmethod
     def _validate_valid_period(val):
         if not isinstance(val, dt.timedelta):
@@ -33,14 +33,14 @@ class InvalidationDict[K, V](dict):
         self._valid_for = val
 
     def invalidate(self, key: K):
-        '''
+        """
         Perform invalidation at `self.key`.
-        '''
+        """
         del self[key]
         return self
 
     def invalidate_old_data(self, valid_for: dt.timedelta | None = None):
-        '''
+        """
         Arguments:
             valid_for:
                 If None, defaults to using `self.valid_for`.
@@ -48,7 +48,7 @@ class InvalidationDict[K, V](dict):
         Raises:
             ValueError:
                 `valid_for` is negative.
-        '''
+        """
 
         now = dt.datetime.now(dt.timezone.utc)
         valid_for = self.valid_for if valid_for is None else valid_for
@@ -58,8 +58,6 @@ class InvalidationDict[K, V](dict):
         for key, value in last_accessed.items():
             if valid_for < now - value:
                 self.invalidate(key)
-
-
 
     def _update_access_time(self, key: K):
 
@@ -73,21 +71,21 @@ class InvalidationDict[K, V](dict):
         self._last_accessed[key] = dt.datetime.now(dt.timezone.utc)
 
     def set_and_update(self, key, value):
-        '''
+        """
         Sets `value` at `key` and updates the access time.
-        '''
+        """
         self[key] = value
         self._update_access_time(key)
         return self
-    
+
     def get_and_update(self, key: K) -> V:
-        '''
+        """
         Gets the value at `key` and updates the access time.
-        '''
+        """
         value = self[key]
         self._update_access_time(key)
         return value
-    
+
     def __delitem__(self, key):
         super().__delitem__(key)
         if key in self._last_accessed:

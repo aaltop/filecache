@@ -1,15 +1,20 @@
 from typing import Callable, Any
 
+
 def all_instance_of(type, *instances):
-    '''
+    """
     Determine whether `instances` are all instances of `type`.
-    '''
+    """
     return all(map(lambda inst: isinstance(inst, type), instances))
 
-type CompareFuncs = list[Callable[[Any,Any], bool | None]] | None
 
-def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: CompareFuncs = None):
-    '''
+type CompareFuncs = list[Callable[[Any, Any], bool | None]] | None
+
+
+def compare_dict_values(
+    dict1: dict, dict2: dict, comparison_funcs: CompareFuncs = None
+):
+    """
     Compare the values in dict1 and dict2.
     Returns a dictionary with each key in dict1
     as keys and booleans as values denoting whether the dicts differ
@@ -28,7 +33,7 @@ def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: CompareFuncs
             If no callable is able to compare the values, the simple
             equality comparison is defaulted to (including when
             `comparison_func` is empty or None).
-    '''
+    """
 
     def dict_equality(dict1, dict2):
         if all_instance_of(dict, dict1, dict2):
@@ -41,18 +46,20 @@ def compare_dict_values(dict1: dict, dict2: dict, comparison_funcs: CompareFuncs
         if value_in_other is None:
             comp[key] = True
             continue
-        
+
         comparison_funcs = [] if comparison_funcs is None else comparison_funcs
         comparison_funcs = [dict_equality] + comparison_funcs
         for comparison_func in comparison_funcs:
             result = comparison_func(value, value_in_other)
             if not (result is None):
                 if not isinstance(result, bool):
-                    raise TypeError("Result of comparison should be None, True, or False")
+                    raise TypeError(
+                        "Result of comparison should be None, True, or False"
+                    )
                 # invert for differ
                 comp[key] = not result
                 break
-        
+
         if not key in comp:
             # default to basic equality comparison
             comp[key] = value != value_in_other
