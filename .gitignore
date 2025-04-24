@@ -20,6 +20,8 @@ __pycache__
 !.git-blame-ignore-revs
 
 !README.md
+!LICENSE
+
 # package manager stuff
 !pyproject.toml
 !uv.lock
