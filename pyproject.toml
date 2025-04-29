@@ -1,6 +1,6 @@
 [project]
 name = "filecacheutils"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Various caching utilities"
 authors = [
     {name = "Topi Aaltonen", email = "aaltopi@gmail.com"},
@@ -11,9 +11,17 @@ requires-python = ">=3.12, <3.14"
 readme = "README.md"
 license = {text = "MIT"}
 
+[project.urls]
+source = "https://github.com/aaltop/filecache"
+issues = "https://github.com/aaltop/filecache/issues"
+
 [build-system]
 requires = ["pdm-backend >= 2.4.4"]
 build-backend = "pdm.backend"
+
+[tool.pdm.version]
+source = "scm"
+version_format = "scripts.build.pdm_version:format_version"
 
 [dependency-groups]
 dev = [

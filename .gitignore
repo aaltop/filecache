@@ -8,6 +8,7 @@ __pycache__
 !src
 !tests
 !examples
+!scripts
 
 # github (actions)
 !.github
