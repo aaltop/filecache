@@ -22,6 +22,7 @@ build-backend = "pdm.backend"
 [tool.pdm.version]
 source = "scm"
 version_format = "scripts.build.pdm_version:format_version"
+fallback_version = "0.1.0"
 
 [dependency-groups]
 dev = [
