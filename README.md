@@ -1,3 +1,5 @@
+[![PyPi](https://img.shields.io/pypi/v/filecacheutils)](https://pypi.org/project/filecacheutils/)
+
 # Filecache
 
 Utilities for caching various things on file. Currently main two
